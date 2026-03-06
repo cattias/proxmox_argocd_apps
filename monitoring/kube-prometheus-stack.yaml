@@ -1,0 +1,264 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-prometheus-stack
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  destination:
+    namespace: monitoring
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: kube-prometheus-stack
+    repoURL: https://prometheus-community.github.io/helm-charts/
+    targetRevision: 82.9.0
+    helm:
+      releaseName: kube-prometheus-stack
+      valuesObject:
+        grafana:
+          enabled: false
+        prometheus:
+          prometheusSpec:
+            storageSpec:
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: proxmox-ceph
+                  accessModes: ["ReadWriteOnce"]
+                  resources:
+                    requests:
+                      storage: 5Gi
+        # alertmanager:
+        #   alertmanagerSpec:
+        #     externalUrl: https://alertmanager.attias.io
+        #     secrets:
+        #       - telegram-bot-secret
+        #   config:
+        #     global:
+        #       resolve_timeout: 5m
+        #     inhibit_rules:
+        #       - source_matchers:
+        #           - 'severity = critical'
+        #         target_matchers:
+        #           - 'severity =~ warning|info'
+        #         equal:
+        #           - 'namespace'
+        #           - 'alertname'
+        #       - source_matchers:
+        #           - 'severity = warning'
+        #         target_matchers:
+        #           - 'severity = info'
+        #         equal:
+        #           - 'namespace'
+        #           - 'alertname'
+        #       - source_matchers:
+        #           - 'alertname = InfoInhibitor'
+        #         target_matchers:
+        #           - 'severity = info'
+        #         equal:
+        #           - 'namespace'
+        #       - target_matchers:
+        #           - 'alertname = InfoInhibitor'
+        #     route:
+        #       group_by: ['namespace']
+        #       group_wait: 30s
+        #       group_interval: 5m
+        #       repeat_interval: 1h
+        #       receiver: 'telegram-alert'
+        #       routes:
+        #       - receiver: 'null'
+        #         matchers:
+        #           - alertname = "Watchdog"
+        #       - receiver: 'null'
+        #         matchers:
+        #           - alertname = "InfoInhibitor"
+        #           - job = "nextcloud-metrics"
+        #       - receiver: 'null'
+        #         matchers:
+        #           - alertname = "KubeControllerManagerDown"
+        #           - job = "kube-controller-manager"
+        #       - receiver: 'null'
+        #         matchers:
+        #           - alertname = "KubeSchedulerDown"
+        #           - job = "kube-scheduler"
+        #     receivers:
+        #     - name: 'null'
+        #     - name: 'telegram-alert'
+        #       telegram_configs:
+        #       - api_url: 'https://api.telegram.org'
+        #         bot_token_file: '/etc/alertmanager/secrets/telegram-bot-secret/botid'
+        #         chat_id: -5088656987
+        #         parse_mode: 'MarkdownV2'
+        #         message: '{{ template "telegram.kiki.message" .}}'
+        #     templates:
+        #     - '/etc/alertmanager/config/*.tmpl'
+        #   templateFiles:
+        #     telegram.tmpl: |-
+        #       {{ define "telegram.kiki.message" }}
+        #       {{printf "1️⃣ __KikiServer__:\n"}}
+        #       {{- if eq .Status "firing" -}}
+        #       Alert: {{ .CommonLabels.alertname }}
+        #       Status: 🔥 FIRING
+        #       Severity: {{ if eq .CommonLabels.severity "critical" }}🔴 {{ .CommonLabels.severity | title }}{{ else if eq .CommonLabels.severity "warning" }}🟠 {{ .CommonLabels.severity | title }}{{ else }}⚪️ {{ .CommonLabels.severity | title }}{{ end }}
+        #       {{- else if eq .Status "resolved" -}}
+        #           ⚪️ Alert: {{ .CommonLabels.alertname }}
+        #       Status: ✅ RESOLVED
+        #       Severity: {{ if eq .CommonLabels.severity "critical" }}🟢 {{ .CommonLabels.severity | title }}{{ else if eq .CommonLabels.severity "warning" }}🟢 {{ .CommonLabels.severity | title }}{{ else }}⚪️ {{ .CommonLabels.severity | title }}{{ end }}
+        #       {{- end }}
+
+        #       {{- range .Alerts -}}
+
+        #       {{- if .Labels.job }}
+        #       Job: `{{ .Labels.job }}`
+        #       {{- end }}
+
+        #       {{- if .Labels.namespace }}
+        #       Namespace: `{{ .Labels.namespace }}`
+        #       {{- end }}
+
+        #       {{- if .Labels.instance }}
+        #       Instance: `{{ .Labels.instance }}`
+        #       {{- end }}
+
+        #       {{- if .Annotations.runbook_url }}
+        #       [RunbookURL]({{ .Annotations.runbook_url }})
+
+        #       {{- end }}
+        #       {{- end }}
+        #       {{ end }}
+        # prometheus-node-exporter:
+        #   extraArgs:
+        #       - --collector.textfile.directory=/var/lib/node_exporter/custom_metrics
+        #   extraHostVolumeMounts:
+        #       - name: custom-metrics
+        #         mountPath: /var/lib/node_exporter/custom_metrics
+        #         hostPath: /var/lib/node_exporter/custom_metrics
+        #         type: "DirectoryOrCreate"
+        #         # mountPropagation: Bidirectional
+        #   extraInitContainers:
+        #     - name: init-permissions
+        #       image: alpine:latest
+        #       securityContext:
+        #         runAsUser: 0            # Run as root to allow chown
+        #         runAsNonRoot: false     # Explicitly allow root
+        #         privileged: true        # Required on some hardened clusters to touch hostPath
+        #         allowPrivilegeEscalation: true
+        #       command: ["/bin/sh", "-c", "chown -R 1000:1000 /var/lib/node_exporter/custom_metrics && chmod 775 /var/lib/node_exporter/custom_metrics"]
+        #       volumeMounts:
+        #         - name: custom-metrics
+        #           mountPath: /var/lib/node_exporter/custom_metrics
+        #   serviceAccount:
+        #     automountServiceAccountToken: true
+        #     create: true
+        #   sidecars:
+        #     - name: version-checker
+        #       image: alpine/curl:latest
+        #       securityContext:
+        #         runAsUser: 1000
+        #         runAsGroup: 1000
+        #         allowPrivilegeEscalation: false
+        #         readOnlyRootFilesystem: false
+        #       args:
+        #       - /bin/sh
+        #       - -c
+        #       - |
+        #         # --- Set up Environment for kubectl ---
+        #         curl -L -o /opt/kubectl "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+        #         chmod +x /opt/kubectl
+
+        #         export TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+        #         export API_SERVER="https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}"
+        #         export CA=$(cat /var/run/secrets/kubernetes.io/serviceaccount/ca.crt | base64 | tr -d '\n')
+
+        #         KUBECONFIG_PATH="/opt/config"
+
+        #         cat > $KUBECONFIG_PATH <<EOF
+        #         apiVersion: v1
+        #         kind: Config
+        #         clusters:
+        #         - cluster:
+        #             certificate-authority-data: $CA
+        #             server: $API_SERVER
+        #           name: kubernetes
+        #         contexts:
+        #         - context:
+        #             cluster: kubernetes
+        #             user: read-only-user
+        #           name: read-only-context
+        #         current-context: read-only-context
+        #         users:
+        #         - name: read-only-user
+        #           user:
+        #             token: $TOKEN
+        #         EOF
+
+        #         export KUBECONFIG=$KUBECONFIG_PATH
+
+        #         # --- Create script ---
+        #         cat > /opt/version-check.sh <<'EOF'
+        #         #!/bin/sh
+
+        #         # Set the output file path where Prometheus will read the metrics
+        #         OUTPUT_FILE="/var/lib/ne/custom_metrics/versions.prom"
+
+        #         # --- k0s Version Check ---
+        #         K0S_LATEST=$(curl -sSL https://api.github.com/repos/k0sproject/k0s/releases/latest | grep '"tag_name":' | head -1 | awk -F '"' '{print $4}' | tr -d 'v' | cut -d '+' -f1)
+        #         K0S_CURRENT=$(/opt/kubectl get nodes -o jsonpath="{.items[0].status.nodeInfo.kubeletVersion}" | cut -d '-' -f1 | tr -d 'v' | cut -d '+' -f1)
+                
+        #         # Use awk for version comparison (1 if latest > current, 0 otherwise)
+        #         K0S_STATUS=$(echo -e "$K0S_CURRENT\n$K0S_LATEST" | sort -V | tail -n 1)
+        #         if [[ "$K0S_STATUS" == "$K0S_LATEST" && "$K0S_LATEST" != "$K0S_CURRENT" ]]; then
+        #             K0S_STATUS_CODE=1
+        #         else
+        #             K0S_STATUS_CODE=0
+        #         fi
+                
+        #         # --- ArgoCD Version Check ---
+        #         # Fetches the latest stable ArgoCD version tag
+        #         ARGOCD_LATEST=$(curl -sSL https://api.github.com/repos/argoproj/argo-cd/releases/latest | grep '"tag_name":' | head -1 | awk -F '"' '{print $4}' | tr -d 'v')
+                
+        #         # Fetches the currently installed ArgoCD version from its Kubernetes Deployment
+        #         ARGOCD_CURRENT=$(/opt/kubectl get deploy argocd-server -n argocd -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null | cut -d ':' -f2 | tr -d 'v')
+                
+        #         if [[ "$(echo -e "$ARGOCD_CURRENT\n$ARGOCD_LATEST" | sort -V | tail -n 1)" == "$ARGOCD_LATEST" && "$ARGOCD_LATEST" != "$ARGOCD_CURRENT" ]]; then
+        #             ARGOCD_STATUS_CODE=1
+        #         else
+        #             ARGOCD_STATUS_CODE=0
+        #         fi
+
+        #         # --- Output Metrics ---
+        #         echo "# Custom Metrics for Version Checks" > $OUTPUT_FILE
+        #         echo "# HELP k0s_upgrade_available Status code for k0s version comparison." >> $OUTPUT_FILE
+        #         echo "# TYPE k0s_upgrade_available gauge" >> $OUTPUT_FILE
+        #         echo "k0s_upgrade_available{current_version=\"$K0S_CURRENT\", latest_version=\"$K0S_LATEST\"} $K0S_STATUS_CODE" >> $OUTPUT_FILE
+                
+        #         echo "# HELP argocd_upgrade_available Status code for ArgoCD version comparison." >> $OUTPUT_FILE
+        #         echo "# TYPE argocd_upgrade_available gauge" >> $OUTPUT_FILE
+        #         echo "argocd_upgrade_available{current_version=\"$ARGOCD_CURRENT\", latest_version=\"$ARGOCD_LATEST\"} $ARGOCD_STATUS_CODE" >> $OUTPUT_FILE
+        #         EOF
+
+        #         chmod +x /opt/version-check.sh
+
+        #         # --- Execution Loop ---
+        #         # Run the script immediately, then loop every 6 hours
+        #         /opt/version-check.sh
+        #         while true; do
+        #           /opt/version-check.sh
+        #           sleep 1h
+        #         done
+        #   sidecarVolumeMount: # Mount the script into the Sidecar container
+        #     - name: version-check-script-volume-mount
+        #       mountPath: /opt
+        #   sidecarHostVolumeMounts:
+        #     - name: textfilecollector
+        #       hostPath: /var/lib/node_exporter/custom_metrics
+        #       mountPath: /var/lib/ne/custom_metrics # Must match where script writes
