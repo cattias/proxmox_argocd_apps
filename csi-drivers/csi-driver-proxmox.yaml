@@ -1,0 +1,28 @@
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: csi-driver-proxmox
+#   namespace: argocd
+#   finalizers:
+#   - resources-finalizer.argocd.argoproj.io
+# spec:
+#   syncPolicy:
+#     automated:
+#       enabled: true
+#       prune: true
+#       selfHeal: true
+#     syncOptions:
+#       - CreateNamespace=true
+#       - ServerSideApply=true
+#   destination:
+#     namespace: kube-system
+#     server: https://kubernetes.default.svc
+#   project: default
+#   source:
+#     chart: proxmox-csi-plugin
+#     repoURL: oci://ghcr.io/sergelogvinov/charts/proxmox-csi-plugin
+#     targetRevision: 0.5.5
+#     helm:
+#       releaseName: proxmox-csi-plugin
+#       valuesObject:
+#         kubeletDir: /var/lib/k0s/kubelet
