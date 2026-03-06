@@ -1,0 +1,1 @@
+# proxmox_argocd_apps
