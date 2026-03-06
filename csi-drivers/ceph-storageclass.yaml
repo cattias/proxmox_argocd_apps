@@ -1,0 +1,13 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: proxmox-ceph
+provisioner: csi.proxmox.sinextra.dev
+parameters:
+  region: p700
+  # The name of the Ceph pool in Proxmox
+  storage: vm-storage
+  format: raw
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
