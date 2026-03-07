@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: seerr
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  syncPolicy:
+    automated:
+      prune: true
+      enabled: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  destination:
+    namespace: arr
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    repoURL: oci://ghcr.io/seerr-team/seerr/seerr-chart
+    targetRevision: 3.3.0
+    chart: seerr
+    helm:
+      valuesObject:
+        image:
+          registry: ghcr.io
+          repository: seerr-team/seerr
+          tag: v3.1.0
+        config:
+          persistence:
+            # -- Size of persistent disk
+            size: 5Gi
+            # -- Access modes of persistent disk
+            accessModes:
+              - ReadWriteOnce
