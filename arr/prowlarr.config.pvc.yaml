@@ -6,7 +6,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: ceph-block
+  storageClassName: proxmox-ceph
   resources:
     requests:
       storage: 1Gi
