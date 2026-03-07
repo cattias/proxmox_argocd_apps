@@ -14,7 +14,7 @@ metadata:
     spec:
       template:
         spec:
-          restartPolicy: Never
+          restartPolicy: OnFailure
           containers:
           - name: postgres-backup-runner
             # Use the official Postgres image, which includes pg_dump and psql tools
@@ -89,8 +89,6 @@ metadata:
                   echo "ERROR: pg_dump or gzip failed. Check database name and user permissions."
                   exit 1
                 fi
-
-          restartPolicy: OnFailure
 
           # Volume Definition: Reference the PVC created previously
           volumes:
