@@ -4,21 +4,12 @@ metadata:
   name: hc-vps-service
   namespace: vps
 spec:
+  type: ExternalName
+  externalName: 91.98.236.199
   ports:
     - protocol: TCP
       port: 80
       targetPort: 80
----
-apiVersion: v1
-kind: Endpoints
-metadata:
-  name: hc-vps-service
-  namespace: vps
-subsets:
-  - addresses:
-      - ip: 91.98.236.199
-    ports:
-      - port: 80
 ---
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute

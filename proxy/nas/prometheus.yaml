@@ -4,21 +4,12 @@ metadata:
   name: prometheus-nas-service
   namespace: nas
 spec:
+  type: ExternalName
+  externalName: 192.168.178.33
   ports:
     - protocol: TCP
       port: 9090
       targetPort: 9090
----
-apiVersion: v1
-kind: Endpoints
-metadata:
-  name: prometheus-nas-service
-  namespace: nas
-subsets:
-  - addresses:
-      - ip: 192.168.178.33
-    ports:
-      - port: 9090
 ---
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
