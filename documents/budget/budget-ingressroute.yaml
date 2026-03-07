@@ -1,0 +1,16 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: budget-router
+  namespace: budget
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`budget.attias.io`)
+      kind: Rule
+      services:
+        - name: budget-actualbudget
+          port: 5006
+  tls:
+    certResolver: le
