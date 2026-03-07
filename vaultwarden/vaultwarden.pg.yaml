@@ -13,6 +13,27 @@ spec:
 
   primaryUpdateStrategy: unsupervised
 
+  bootstrap:
+    recovery:
+      source: legacy-nas-source
+      backupID: "20260306T000002" # Explicitly use the latest one you have
+
+  externalClusters:
+    - name: legacy-nas-source
+      barmanObjectStore: # Simplified reference to the same ObjectStore
+        destinationPath: s3://backup-vaultwarden
+        endpointURL: http://192.168.178.69:7480
+        s3Credentials:
+          accessKeyId:
+            name: barman-secret
+            key: ACCESS_KEY_ID
+          secretAccessKey:
+            name: barman-secret
+            key: ACCESS_SECRET_KEY
+        wal:
+          compression: gzip
+        serverName: vaultwarden-db
+
   storage:
     size: 5Gi
     storageClass: proxmox-ceph
