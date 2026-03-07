@@ -15,7 +15,7 @@ spec:
 
   storage:
     size: 5Gi
-    storageClass: ceph-block
+    storageClass: proxmox-ceph
 
   plugins:
   - name: barman-cloud.cloudnative-pg.io
