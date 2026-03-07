@@ -16,9 +16,10 @@ spec:
   bootstrap:
     recovery:
       source: legacy-nas-source
-      # recoveryTarget:
-      #   backupID: "20260306T000002"
-      #   targetImmediate: true
+      recoveryTarget:
+        backupID: "20260306T000002"
+        targetImmediate: true
+        exclusive: true
 
   externalClusters:
     - name: legacy-nas-source
