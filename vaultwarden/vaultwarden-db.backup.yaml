@@ -1,11 +1,13 @@
 # This CronJob runs daily, executes the pg_dumpall command, compresses the output, 
 # and saves the resulting file to the mounted NFS Persistent Volume Claim (PVC).
+# one or more objects failed to apply, reason: CronJob.batch "daily-postgres-vault-nfs-backup" is invalid: [spec.schedule: Required value, spec.jobTemplate.spec.template.spec.containers: Required value, spec.jobTemplate.spec.template.spec.restartPolicy: Required value: valid values: "OnFailure", "Never"]. Retrying attempt #1 at 9:03PM.
 
 apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: daily-postgres-vault-nfs-backup
   namespace: vaultwarden
+spec:
   schedule: "5 0 * * *"
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 1
