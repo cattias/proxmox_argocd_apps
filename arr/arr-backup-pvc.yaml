@@ -21,6 +21,7 @@ spec:
     - retrans=2
     - noatime
     - tcp
+    - nolock
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
