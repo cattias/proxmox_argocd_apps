@@ -4,8 +4,7 @@ metadata:
   name: proxmox-ceph
 provisioner: csi.proxmox.sinextra.dev
 parameters:
-  region: p700
-  # The name of the Ceph pool in Proxmox
+  region: pvemaster
   storage: vm-storage
   format: raw
 reclaimPolicy: Delete
