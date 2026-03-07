@@ -16,23 +16,18 @@ spec:
   bootstrap:
     recovery:
       source: legacy-nas-source
-      backupID: "20260306T000002" # Explicitly use the latest one you have
+      backupID: "20260306T000002"
 
   externalClusters:
     - name: legacy-nas-source
-      barmanObjectStore: # Simplified reference to the same ObjectStore
-        destinationPath: s3://backup-vaultwarden
-        endpointURL: http://192.168.178.69:7480
-        s3Credentials:
-          accessKeyId:
-            name: barman-secret
-            key: ACCESS_KEY_ID
-          secretAccessKey:
-            name: barman-secret
-            key: ACCESS_SECRET_KEY
-        wal:
-          compression: gzip
-        serverName: vaultwarden-db
+      # CHANGE THIS SECTION: Use 'plugin' instead of 'barmanObjectStore'
+      plugin:
+        name: barman-cloud.cloudnative-pg.io
+        parameters:
+          # This must match the name of your ObjectStore CRD
+          barmanObjectName: vaultwarden-backup-store 
+          # This must match the folder name in S3
+          serverName: vaultwarden-db
 
   storage:
     size: 5Gi
