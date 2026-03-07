@@ -30,9 +30,17 @@ spec:
           tag: v3.1.0
         config:
           persistence:
-            # -- Size of persistent disk
-            size: 5Gi
-            # -- Access modes of persistent disk
-            accessModes:
-              - ReadWriteOnce
-            storageClassName: proxmox-ceph
+            existingClaim: seerr-config-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: seerr-config-pvc
+  namespace: arr
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: proxmox-ceph
+  resources:
+    requests:
+      storage: 5Gi
