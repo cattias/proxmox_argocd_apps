@@ -1,0 +1,20 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-dns
+  namespace: traefik
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: christophe.attias@gmail.com
+    privateKeySecretRef:
+      name: letsencrypt-dns-account-key
+    solvers:
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-api-token-secret
+              key: token
+      - http01:
+          ingress:
+            class: traefik
