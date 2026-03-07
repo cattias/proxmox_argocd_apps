@@ -1,0 +1,42 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: authentik-db
+  namespace: authentik
+spec:
+  instances: 2
+  imageCatalogRef:
+    apiGroup: postgresql.cnpg.io
+    kind: ClusterImageCatalog
+    name: postgresql-standard-trixie
+    major: 18
+
+  primaryUpdateStrategy: unsupervised
+
+  storage:
+    size: 10Gi
+    storageClass: proxmox-ceph
+
+  plugins:
+  - name: barman-cloud.cloudnative-pg.io
+    enabled: true
+    isWALArchiver: true
+    parameters:
+      barmanObjectName: authentik-backup-store
+
+  monitoring:
+    enablePodMonitor: false
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: authentik-db
+  namespace: authentik
+  labels:
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      cnpg.io/cluster: authentik-db
+  podMetricsEndpoints:
+  - port: metrics
