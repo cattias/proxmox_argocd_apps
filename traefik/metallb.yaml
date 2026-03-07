@@ -29,24 +29,16 @@ spec:
           namespace: monitoring
           serviceAccount: "kube-prometheus-stack-prometheus"
           podMonitor:
-            # enable support for Prometheus Operator
             enabled: false
-            additionalLabels:
-              release: kube-prometheus-stack
           serviceMonitor:
-            # enable support for Prometheus Operator
             enabled: true
             speaker:
-              # optional additional labels for the speaker serviceMonitor
-            additionalLabels:
-              release: kube-prometheus-stack
-
+              additionalLabels:
+                release: kube-prometheus-stack
             controller:
-              # optional additional labels for the controller serviceMonitor
-            additionalLabels:
-              release: kube-prometheus-stack
+              additionalLabels:
+                release: kube-prometheus-stack
           prometheusRule:
-            # enable alertmanager alerts
             enabled: true
             additionalLabels:
               release: kube-prometheus-stack
