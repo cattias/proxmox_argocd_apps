@@ -35,3 +35,4 @@ spec:
             # -- Access modes of persistent disk
             accessModes:
               - ReadWriteOnce
+            storageClassName: proxmox-ceph
