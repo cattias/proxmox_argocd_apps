@@ -1,0 +1,42 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloudnative-pg
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  syncPolicy:
+    automated:
+      prune: true
+      enabled: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  destination:
+    namespace: postgres-operator
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    repoURL: https://cloudnative-pg.github.io/charts
+    targetRevision: 0.27.1
+    chart: cloudnative-pg
+    helm:
+      valuesObject:
+        config:
+          clusterWide: true
+
+        monitoring:
+          # -- Specifies whether the monitoring should be enabled. Requires Prometheus Operator CRDs.
+          podMonitorEnabled: true
+          podMonitorAdditionalLabels:
+            release: kube-prometheus-stack
+          grafanaDashboard:
+            create: true
+            # -- Allows overriding the namespace where the ConfigMap will be created, defaulting to the same one as the Release.
+            namespace: "monitoring"
+            # -- The name of the ConfigMap containing the dashboard.
+            configMapName: "cnpg-grafana-dashboard"
+            labels:
+              grafana_dashboard: "1"
