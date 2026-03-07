@@ -17,6 +17,8 @@ spec:
     recovery:
       source: legacy-nas-source
       backupID: "20260306T000002"
+      recoveryTarget:
+        targetImmediate: true  # This tells it not to look for future WALs
 
   externalClusters:
     - name: legacy-nas-source
