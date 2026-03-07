@@ -13,25 +13,6 @@ spec:
 
   primaryUpdateStrategy: unsupervised
 
-  # bootstrap:
-  #   recovery:
-  #     source: legacy-nas-source
-  #     recoveryTarget:
-  #       backupID: "20260306T000002"
-  #       targetImmediate: true
-  #       exclusive: true
-
-  # externalClusters:
-  #   - name: legacy-nas-source
-  #     # CHANGE THIS SECTION: Use 'plugin' instead of 'barmanObjectStore'
-  #     plugin:
-  #       name: barman-cloud.cloudnative-pg.io
-  #       parameters:
-  #         # This must match the name of your ObjectStore CRD
-  #         barmanObjectName: vaultwarden-backup-store 
-  #         # This must match the folder name in S3
-  #         serverName: vaultwarden-db
-
   storage:
     size: 5Gi
     storageClass: proxmox-ceph
