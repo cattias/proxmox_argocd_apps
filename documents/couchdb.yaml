@@ -1,0 +1,92 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: couchdb
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
+spec:
+  ignoreDifferences:
+    - group: apps
+      kind: StatefulSet
+      name: couchdb-couchdb
+      jsonPointers:
+      # - /spec/template/metadata/creationTimestamp # Ignored for Pod Template
+      # - /metadata/creationTimestamp # Ignored for the StatefulSet itself
+      - /spec/volumeClaimTemplates/0/metadata/apiVersion
+      - /spec/volumeClaimTemplates/0/metadata/kind
+  syncPolicy:
+    automated:
+      prune: true
+      enabled: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
+  destination:
+    namespace: documents
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    repoURL: https://apache.github.io/couchdb-helm
+    targetRevision: 4.6.3
+    chart: couchdb
+    helm:
+      valuesObject:
+        labels:
+          app.kubernetes.io/name: couchdb
+        createAdminSecret: false
+        extraSecretName: "couchdb-secret"
+        adminUsernameKey: "username"
+        adminPasswordKey: "password"
+        cookieAuthSecretKey: "cookieauthsecret"
+        erlangCookieKey: "erlangcookie"
+        couchdbConfig:
+          couchdb:
+            uuid: lecouchdbdesuperkikipourobsidian
+            max_document_size: 1Gi
+          chttpd:
+            bind_address: any
+            # chttpd.require_valid_user disables all the anonymous requests to the port
+            # 5984 when is set to true.
+            require_valid_user: true
+            # required to use Fauxton if chttpd.require_valid_user is set to true
+            enable_cors: true
+            max_http_request_size: 1Gi
+          httpd:
+            WWW-Authenticate: "Basic realm=\"administrator\""
+          cors:
+            origins: app://obsidian.md,capacitor://localhost,http://localhost
+            credentials: true
+          replicator:
+            auth_plugins: couch_replicator_auth_noop
+        persistentVolume:
+          enabled: true
+          accessModes:
+            - ReadWriteOnce
+          size: 10Gi
+          storageClass: ceph-block
+        enableSearch: true
+        prometheusPort:
+          enabled: true
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: couchdb-router
+  namespace: documents
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`couchdb.attias.io`)
+      kind: Rule
+      services:
+        - name: couchdb-svc-couchdb
+          port: 5984
+      priority: 10
+  tls:
+    certResolver: le
