@@ -1,0 +1,130 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: traefik
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  syncPolicy:
+    automated:
+      prune: true
+      enabled: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  destination:
+    namespace: traefik
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    repoURL: https://traefik.github.io/charts
+    targetRevision: 39.0.4
+    chart: traefik
+    helm:
+      valuesObject:
+        providers:  # @schema additionalProperties: false
+          kubernetesCRD:
+            enabled: true
+            allowCrossNamespace: true
+        service:
+          loadBalancerIP: 192.168.178.200
+          type: LoadBalancer
+          spec:
+            externalTrafficPolicy: Local
+        ports:
+          traefik:
+            port: 8080
+            expose:
+              default: true
+            exposedPort: 8080
+            protocol: TCP
+          web:
+            port: 8000
+            expose:
+              default: true
+            exposedPort: 80
+            targetPort: 8000
+            protocol: TCP
+            forwardedHeaders:
+              trustedIPs:
+                - "100.64.0.2/32"
+                - "127.0.0.1/32"
+                - "10.244.0.0/16"
+              insecure: false
+            transport:
+              respondingTimeouts:
+                readTimeout: 600s
+                idleTimeout: 600s
+                writeTimeout: 600s
+          websecure:
+            port: 8443
+            expose:
+              default: true
+            exposedPort: 443
+            targetPort: 8443
+            protocol: TCP
+            forwardedHeaders:
+              trustedIPs:
+                - "100.64.0.2/32"
+                - "127.0.0.1/32"
+                - "10.244.0.0/16"
+              insecure: false
+            transport:
+              respondingTimeouts:
+                readTimeout: 600s
+                idleTimeout: 600s
+                writeTimeout: 600s
+        api:
+          dashboard: true
+        ingressRoute:
+          dashboard:
+            enabled: true
+            matchRule: Host(`traefik.attias.io`)
+            entryPoints: ["websecure"]
+            tls:
+              certResolver: le
+        metrics:
+          prometheus:
+            serviceMonitor:
+              enabled: true
+            prometheusRule:
+              enabled: false
+              # one or more objects failed to apply, reason: admission webhook "prometheusrulemutate.monitoring.coreos.com" denied the request: Cannot unmarshal rules from spec. 
+              additionalLabels:
+                release: kube-prometheus-stack
+        env:
+          - name: CF_API_EMAIL
+            value: christophe.attias@gmail.com
+          - name: CF_DNS_API_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: cloudflare-api-token-secret
+                key: token
+          - name: CF_ZONE_API_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: cloudflare-api-token-secret
+                key: token
+        podSecurityContext:
+          runAsGroup: 0
+          runAsNonRoot: false
+          runAsUser: 0
+        certificatesResolvers:
+          le:
+            acme:
+              email: christophe.attias@gmail.com
+              storage: /data/acme.json
+              caServer: https://acme-v02.api.letsencrypt.org/directory
+              dnsChallenge:
+                provider: cloudflare
+                delayBeforeCheck: 0
+        persistence:
+          enabled: true
+          existingClaim: traefik-data-pvc
+        logs:
+          access:
+            enabled: false
+            format: "json"
+            filePath: "/data/access.log"
