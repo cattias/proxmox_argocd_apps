@@ -37,6 +37,9 @@ spec:
           volumeMounts:
             - mountPath: /data
               name: nas-media-volume
+            - mountPath: /config/Backups/scheduled
+              name: backup-volume
+              subPath: arr/radarr
             - mountPath: /config
               name: radarr-config
           livenessProbe:
@@ -72,3 +75,6 @@ spec:
         - name: radarr-config
           persistentVolumeClaim:
             claimName: radarr-config-pvc
+        - name: backup-volume
+          persistentVolumeClaim:
+            claimName: arr-backup-pvc
