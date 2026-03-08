@@ -48,12 +48,17 @@ spec:
           - address=/hc.attias.io/authentik.attias.io/attias.io/192.168.178.200
 
           # --- Other Static Local Entries ---
-          # - address=/pihole.pve.kiki.home/192.168.178.80
-          # - address=/pihole.kiki.home/192.168.178.110
-          # - address=/pihole2.kiki.home/192.168.178.203
+          - address=/pihole.pve.kiki.home/192.168.178.80
+          - address=/pihole.kiki.home/192.168.178.203
           - address=/kiki.node/node.kiki.home/192.168.178.34
           - address=/nas.kiki.home/192.168.178.33
           - address=/offsite.kiki.home/100.64.0.6
+          - address=/k0s-master-01/192.168.178.175
+          - address=/k0s-master-02/192.168.178.199
+          - address=/k0s-master-03/192.168.178.196
+          - address=/k0s-worker-01/192.168.178.72
+          - address=/k0s-worker-02/192.168.178.223
+          - address=/k0s-worker-03/192.168.178.15
 
         persistentVolumeClaim:
           enabled: true
