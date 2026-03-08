@@ -37,104 +37,104 @@ spec:
                   resources:
                     requests:
                       storage: 5Gi
-        # alertmanager:
-        #   alertmanagerSpec:
-        #     externalUrl: https://alertmanager.attias.io
-        #     secrets:
-        #       - telegram-bot-secret
-        #   config:
-        #     global:
-        #       resolve_timeout: 5m
-        #     inhibit_rules:
-        #       - source_matchers:
-        #           - 'severity = critical'
-        #         target_matchers:
-        #           - 'severity =~ warning|info'
-        #         equal:
-        #           - 'namespace'
-        #           - 'alertname'
-        #       - source_matchers:
-        #           - 'severity = warning'
-        #         target_matchers:
-        #           - 'severity = info'
-        #         equal:
-        #           - 'namespace'
-        #           - 'alertname'
-        #       - source_matchers:
-        #           - 'alertname = InfoInhibitor'
-        #         target_matchers:
-        #           - 'severity = info'
-        #         equal:
-        #           - 'namespace'
-        #       - target_matchers:
-        #           - 'alertname = InfoInhibitor'
-        #     route:
-        #       group_by: ['namespace']
-        #       group_wait: 30s
-        #       group_interval: 5m
-        #       repeat_interval: 1h
-        #       receiver: 'telegram-alert'
-        #       routes:
-        #       - receiver: 'null'
-        #         matchers:
-        #           - alertname = "Watchdog"
-        #       - receiver: 'null'
-        #         matchers:
-        #           - alertname = "InfoInhibitor"
-        #           - job = "nextcloud-metrics"
-        #       - receiver: 'null'
-        #         matchers:
-        #           - alertname = "KubeControllerManagerDown"
-        #           - job = "kube-controller-manager"
-        #       - receiver: 'null'
-        #         matchers:
-        #           - alertname = "KubeSchedulerDown"
-        #           - job = "kube-scheduler"
-        #     receivers:
-        #     - name: 'null'
-        #     - name: 'telegram-alert'
-        #       telegram_configs:
-        #       - api_url: 'https://api.telegram.org'
-        #         bot_token_file: '/etc/alertmanager/secrets/telegram-bot-secret/botid'
-        #         chat_id: -5088656987
-        #         parse_mode: 'MarkdownV2'
-        #         message: '{{ template "telegram.kiki.message" .}}'
-        #     templates:
-        #     - '/etc/alertmanager/config/*.tmpl'
-        #   templateFiles:
-        #     telegram.tmpl: |-
-        #       {{ define "telegram.kiki.message" }}
-        #       {{printf "1️⃣ __KikiServer__:\n"}}
-        #       {{- if eq .Status "firing" -}}
-        #       Alert: {{ .CommonLabels.alertname }}
-        #       Status: 🔥 FIRING
-        #       Severity: {{ if eq .CommonLabels.severity "critical" }}🔴 {{ .CommonLabels.severity | title }}{{ else if eq .CommonLabels.severity "warning" }}🟠 {{ .CommonLabels.severity | title }}{{ else }}⚪️ {{ .CommonLabels.severity | title }}{{ end }}
-        #       {{- else if eq .Status "resolved" -}}
-        #           ⚪️ Alert: {{ .CommonLabels.alertname }}
-        #       Status: ✅ RESOLVED
-        #       Severity: {{ if eq .CommonLabels.severity "critical" }}🟢 {{ .CommonLabels.severity | title }}{{ else if eq .CommonLabels.severity "warning" }}🟢 {{ .CommonLabels.severity | title }}{{ else }}⚪️ {{ .CommonLabels.severity | title }}{{ end }}
-        #       {{- end }}
+        alertmanager:
+          alertmanagerSpec:
+            externalUrl: https://alertmanager.attias.io
+            secrets:
+              - telegram-bot-secret
+          config:
+            global:
+              resolve_timeout: 5m
+            inhibit_rules:
+              - source_matchers:
+                  - 'severity = critical'
+                target_matchers:
+                  - 'severity =~ warning|info'
+                equal:
+                  - 'namespace'
+                  - 'alertname'
+              - source_matchers:
+                  - 'severity = warning'
+                target_matchers:
+                  - 'severity = info'
+                equal:
+                  - 'namespace'
+                  - 'alertname'
+              - source_matchers:
+                  - 'alertname = InfoInhibitor'
+                target_matchers:
+                  - 'severity = info'
+                equal:
+                  - 'namespace'
+              - target_matchers:
+                  - 'alertname = InfoInhibitor'
+            route:
+              group_by: ['namespace']
+              group_wait: 30s
+              group_interval: 5m
+              repeat_interval: 1h
+              receiver: 'telegram-alert'
+              routes:
+              - receiver: 'null'
+                matchers:
+                  - alertname = "Watchdog"
+              - receiver: 'null'
+                matchers:
+                  - alertname = "InfoInhibitor"
+                  - job = "nextcloud-metrics"
+              - receiver: 'null'
+                matchers:
+                  - alertname = "KubeControllerManagerDown"
+                  - job = "kube-controller-manager"
+              - receiver: 'null'
+                matchers:
+                  - alertname = "KubeSchedulerDown"
+                  - job = "kube-scheduler"
+            receivers:
+            - name: 'null'
+            - name: 'telegram-alert'
+              telegram_configs:
+              - api_url: 'https://api.telegram.org'
+                bot_token_file: '/etc/alertmanager/secrets/telegram-bot-secret/botid'
+                chat_id: -5088656987
+                parse_mode: 'MarkdownV2'
+                message: '{{ template "telegram.kiki.message" .}}'
+            templates:
+            - '/etc/alertmanager/config/*.tmpl'
+          templateFiles:
+            telegram.tmpl: |-
+              {{ define "telegram.kiki.message" }}
+              {{printf "1️⃣ __KikiServer__:\n"}}
+              {{- if eq .Status "firing" -}}
+              Alert: {{ .CommonLabels.alertname }}
+              Status: 🔥 FIRING
+              Severity: {{ if eq .CommonLabels.severity "critical" }}🔴 {{ .CommonLabels.severity | title }}{{ else if eq .CommonLabels.severity "warning" }}🟠 {{ .CommonLabels.severity | title }}{{ else }}⚪️ {{ .CommonLabels.severity | title }}{{ end }}
+              {{- else if eq .Status "resolved" -}}
+                  ⚪️ Alert: {{ .CommonLabels.alertname }}
+              Status: ✅ RESOLVED
+              Severity: {{ if eq .CommonLabels.severity "critical" }}🟢 {{ .CommonLabels.severity | title }}{{ else if eq .CommonLabels.severity "warning" }}🟢 {{ .CommonLabels.severity | title }}{{ else }}⚪️ {{ .CommonLabels.severity | title }}{{ end }}
+              {{- end }}
 
-        #       {{- range .Alerts -}}
+              {{- range .Alerts -}}
 
-        #       {{- if .Labels.job }}
-        #       Job: `{{ .Labels.job }}`
-        #       {{- end }}
+              {{- if .Labels.job }}
+              Job: `{{ .Labels.job }}`
+              {{- end }}
 
-        #       {{- if .Labels.namespace }}
-        #       Namespace: `{{ .Labels.namespace }}`
-        #       {{- end }}
+              {{- if .Labels.namespace }}
+              Namespace: `{{ .Labels.namespace }}`
+              {{- end }}
 
-        #       {{- if .Labels.instance }}
-        #       Instance: `{{ .Labels.instance }}`
-        #       {{- end }}
+              {{- if .Labels.instance }}
+              Instance: `{{ .Labels.instance }}`
+              {{- end }}
 
-        #       {{- if .Annotations.runbook_url }}
-        #       [RunbookURL]({{ .Annotations.runbook_url }})
+              {{- if .Annotations.runbook_url }}
+              [RunbookURL]({{ .Annotations.runbook_url }})
 
-        #       {{- end }}
-        #       {{- end }}
-        #       {{ end }}
+              {{- end }}
+              {{- end }}
+              {{ end }}
         # prometheus-node-exporter:
         #   extraArgs:
         #       - --collector.textfile.directory=/var/lib/node_exporter/custom_metrics
