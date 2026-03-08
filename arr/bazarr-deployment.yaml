@@ -41,6 +41,9 @@ spec:
             - mountPath: /tv
               name: nas-media-volume
               subPath: "TV Shows"
+            - mountPath: /config/backup
+              name: backup-volume
+              subPath: arr/bazarr
             - mountPath: /config
               name: bazarr-config
           livenessProbe:
@@ -76,3 +79,6 @@ spec:
         - name: bazarr-config
           persistentVolumeClaim:
             claimName: bazarr-config-pvc
+        - name: backup-volume
+          persistentVolumeClaim:
+            claimName: arr-backup-pvc
