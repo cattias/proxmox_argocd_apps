@@ -5,7 +5,7 @@ metadata:
   namespace: nas
 spec:
   type: ExternalName
-  externalName: 192.168.178.33
+  externalName: 192.168.178.219
   ports:
     - protocol: TCP
       port: 5005

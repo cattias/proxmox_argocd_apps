@@ -40,7 +40,7 @@
 #             - name: RCLONE_CONFIG_NAS_AUTH_REDIRECT
 #               value: "true"
 #             - name: RCLONE_CONFIG_NAS_URL
-#               value: "http://192.168.178.33:5005/backup/postgresql_ceph"
+#               value: "https://webdav.nas.attias.io/backup/postgresql_ceph"
 #             - name: RCLONE_CONFIG_NAS_VENDOR
 #               value: "other"
 #             - name: RCLONE_CONFIG_NAS_USER

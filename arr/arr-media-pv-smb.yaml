@@ -12,7 +12,7 @@ spec:
     driver: smb.csi.k8s.io
     volumeHandle: arr-media-smb-share
     volumeAttributes:
-      source: "//192.168.178.33/media"
+      source: "//192.168.178.219/media"
     nodeStageSecretRef:
       name: smbcreds
       namespace: arr
