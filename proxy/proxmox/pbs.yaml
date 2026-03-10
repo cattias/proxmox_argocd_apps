@@ -5,7 +5,7 @@ metadata:
   namespace: home
 spec:
   type: ExternalName
-  externalName: 192.168.178.37
+  externalName: 192.168.178.10
   ports:
     - protocol: TCP
       port: 8007
