@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: proxmox-service
+  namespace: home
+spec:
+  type: ExternalName
+  externalName: 192.168.178.69
+  ports:
+    - protocol: TCP
+      port: 8006
+      targetPort: 8006
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: proxmox-router
+  namespace: home
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`proxmox.attias.io`)
+      kind: Rule
+      services:
+        - name: proxmox-service
+          port: 8006
+      priority: 10
+  tls:
+    certResolver: le
