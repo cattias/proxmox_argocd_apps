@@ -5,13 +5,13 @@
     ":disableRateLimiting",
     ":configMigration"
   ],
-  "dependencyDashboardTitle": "Renovate Kiki Dashboard - Server",
+  "dependencyDashboardTitle": "Renovate Kiki Dashboard - K0s",
   "rebaseWhen": "conflicted",
   "customManagers": [
     {
       "customType": "regex",
       "managerFilePatterns": [
-        "/renovate/renovate-cron\\.yaml/"
+        "/home/renovate/renovate-cron\\.yaml/"
       ],
       "matchStrings": [
         "name:\\s*renovate\\s*\\n\\s*image:\\s*renovate\\/renovate:\\s*(?<currentValue>v?[0-9\\.]+)"
@@ -61,7 +61,7 @@
     {
       "customType": "regex",
       "managerFilePatterns": [
-        "/apps/templates/cert-manager/cert-manager\\.yaml/"
+        "/cert-manager/cert-manager\\.yaml/"
       ],
       "matchStrings": [
         "repoURL:\\s*oci:\\/\\/quay\\.io\\/jetstack\\/charts\\/cert-manager\\s*\\n\\s*targetRevision:\\s*(?<currentValue>v?[0-9\\.]+)\\s*\\n\\s*chart:\\s*cert-manager"
@@ -85,18 +85,6 @@
     {
       "customType": "regex",
       "managerFilePatterns": [
-        "/apps/templates/pihole\\.yaml/"
-      ],
-      "matchStrings": [
-        "image:\\s*\\n\\s*repository:\\s*pihole\\/pihole\\s*\\n\\s*tag:\\s*(?<currentValue>v?[0-9\\.]+)"
-      ],
-      "datasourceTemplate": "docker",
-      "depNameTemplate": "ghcr.io/pi-hole/pihole",
-      "versioningTemplate": "semver"
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
         "/immich/immich\\.yaml/"
       ],
       "matchStrings": [
@@ -109,7 +97,7 @@
     {
       "customType": "regex",
       "managerFilePatterns": [
-        "/homepage/homepage-deployment\\.yaml/"
+        "/home/homepage/homepage-deployment\\.yaml/"
       ],
       "matchStrings": [
         "name:\\s*homepage\\s*\\n\\s*image:\\s*ghcr\\.io\\/gethomepage\\/homepage:\\s*(?<currentValue>v?[0-9\\.]+)"
@@ -118,34 +106,34 @@
       "depNameTemplate": "ghcr.io/gethomepage/homepage",
       "versioningTemplate": "semver"
     },
+    // {
+    //   "customType": "regex",
+    //   "managerFilePatterns": [
+    //     "/kube-prometheus-stack/nut-exporter-deployment\\.yaml/"
+    //   ],
+    //   "matchStrings": [
+    //     "name:\\s*nut-exporter\\s*\\n\\s*image:\\s*ghcr\\.io\\/druggeri\\/nut_exporter:\\s*(?<currentValue>v?[0-9\\.]+)"
+    //   ],
+    //   "datasourceTemplate": "docker",
+    //   "depNameTemplate": "ghcr.io/druggeri/nut_exporter",
+    //   "versioningTemplate": "semver"
+    // },
+    // {
+    //   "customType": "regex",
+    //   "managerFilePatterns": [
+    //     "/paperless/paperless-deployment\\.yaml/"
+    //   ],
+    //   "matchStrings": [
+    //     "name:\\s*paperless-ngx\\s*\\n\\s*image:\\s*ghcr\\.io\\/paperless-ngx\\/paperless-ngx:\\s*(?<currentValue>v?[0-9\\.]+)"
+    //   ],
+    //   "datasourceTemplate": "docker",
+    //   "depNameTemplate": "ghcr.io/paperless-ngx/paperless-ngx",
+    //   "versioningTemplate": "semver"
+    // },
     {
       "customType": "regex",
       "managerFilePatterns": [
-        "/kube-prometheus-stack/nut-exporter-deployment\\.yaml/"
-      ],
-      "matchStrings": [
-        "name:\\s*nut-exporter\\s*\\n\\s*image:\\s*ghcr\\.io\\/druggeri\\/nut_exporter:\\s*(?<currentValue>v?[0-9\\.]+)"
-      ],
-      "datasourceTemplate": "docker",
-      "depNameTemplate": "ghcr.io/druggeri/nut_exporter",
-      "versioningTemplate": "semver"
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
-        "/paperless/paperless-deployment\\.yaml/"
-      ],
-      "matchStrings": [
-        "name:\\s*paperless-ngx\\s*\\n\\s*image:\\s*ghcr\\.io\\/paperless-ngx\\/paperless-ngx:\\s*(?<currentValue>v?[0-9\\.]+)"
-      ],
-      "datasourceTemplate": "docker",
-      "depNameTemplate": "ghcr.io/paperless-ngx/paperless-ngx",
-      "versioningTemplate": "semver"
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
-        "/paperless/bentopdf-deployment\\.yaml/"
+        "/documents/bentopdf-deployment\\.yaml/"
       ],
       "matchStrings": [
         "name:\\s*bentopdf\\s*\\n\\s*image:\\s*ghcr\\.io\\/alam00000\\/bentopdf-simple:\\s*(?<currentValue>v?[0-9\\.]+)"
@@ -157,37 +145,13 @@
     {
       "customType": "regex",
       "managerFilePatterns": [
-        "/plex/kometa-cron\\.yaml/"
+        "/arr/kometa-cron\\.yaml/"
       ],
       "matchStrings": [
         "name:\\s*kometa\\s*\\n\\s*image:\\s*kometateam\\/kometa:\\s*(?<currentValue>v?[0-9\\.]+)"
       ],
       "datasourceTemplate": "docker",
       "depNameTemplate": "kometateam/kometa",
-      "versioningTemplate": "semver"
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
-        "/plex/plex\\.yaml/"
-      ],
-      "matchStrings": [
-        "tag:\\s*(?<currentValue>[a-zA-Z0-9\\.\\-]+)"
-      ],
-      "datasourceTemplate": "docker",
-      "depNameTemplate": "plexinc/pms-docker",
-      "versioningTemplate": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)\\.(?<build>\\d+)-(?<revision>[a-f0-9]+)$"
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
-        "/mealie/mealie-deployment\\.yaml/"
-      ],
-      "matchStrings": [
-        "name:\\s*mealie\\s*\\n\\s*image:\\s*ghcr\\.io\\/mealie-recipes\\/mealie:\\s*(?<currentValue>v?[0-9\\.]+)"
-      ],
-      "datasourceTemplate": "docker",
-      "depNameTemplate": "ghcr.io/mealie-recipes/mealie",
       "versioningTemplate": "semver"
     },
     {
@@ -214,30 +178,18 @@
       "depNameTemplate": "quay.io/opstree/redis",
       "versioningTemplate": "semver"
     },
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
-        "/paperless/paperless\\.redis\\.yaml/"
-      ],
-      "matchStrings": [
-        "kubernetesConfig:\\s*\\n\\s*image:\\s*quay\\.io\\/opstree\\/redis:(?<currentValue>v?[0-9\\.]+)"
-      ],
-      "datasourceTemplate": "docker",
-      "depNameTemplate": "quay.io/opstree/redis",
-      "versioningTemplate": "semver"
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
-        "/arr/deemix-deployment\\.yaml/"
-      ],
-      "matchStrings": [
-        "name:\\s*deemix\\s*\\n\\s*image:\\s*ghcr\\.io\\/bambanah\\/deemix:\\s*(?<currentValue>v?[0-9\\.]+)"
-      ],
-      "datasourceTemplate": "docker",
-      "depNameTemplate": "ghcr.io/bambanah/deemix",
-      "versioningTemplate": "semver"
-    },
+    // {
+    //   "customType": "regex",
+    //   "managerFilePatterns": [
+    //     "/paperless/paperless\\.redis\\.yaml/"
+    //   ],
+    //   "matchStrings": [
+    //     "kubernetesConfig:\\s*\\n\\s*image:\\s*quay\\.io\\/opstree\\/redis:(?<currentValue>v?[0-9\\.]+)"
+    //   ],
+    //   "datasourceTemplate": "docker",
+    //   "depNameTemplate": "quay.io/opstree/redis",
+    //   "versioningTemplate": "semver"
+    // },
     {
       "customType": "regex",
       "managerFilePatterns": [
@@ -253,7 +205,7 @@
     {
       "customType": "regex",
       "managerFilePatterns": [
-        "/plex/tautulli-deployment\\.yaml/"
+        "/arr/tautulli-deployment\\.yaml/"
       ],
       "matchStrings": [
         "name:\\s*tautulli\\s*\\n\\s*image:\\s*ghcr\\.io\\/tautulli\\/tautulli:\\s*(?<currentValue>v?[0-9\\.]+)"
@@ -265,7 +217,7 @@
     {
       "customType": "regex",
       "managerFilePatterns": [
-        "/plex/plex-auto-language\\.yaml/"
+        "/arr/plex-auto-language\\.yaml/"
       ],
       "matchStrings": [
         "name:\\s*plex-auto-languages\\s*\\n\\s*image:\\s*remirigal\\/plex-auto-languages:\\s*(?<currentValue>v?[0-9\\.]+)"
@@ -274,30 +226,18 @@
       "depNameTemplate": "remirigal/plex-auto-languages",
       "versioningTemplate": "semver"
     },
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
-        "/apps/templates/rook-ceph/rook-ceph-cluster\\.yaml/"
-      ],
-      "matchStrings": [
-        "image:\\s*quay\\.io/ceph/ceph:\\s*(?<currentValue>v?[0-9\\.]+)"
-      ],
-      "datasourceTemplate": "docker",
-      "depNameTemplate": "quay.io/ceph/ceph",
-      "versioningTemplate": "semver"
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
-        "/homeassistant/ha-deployment\\.yaml/"
-      ],
-      "matchStrings": [
-        "name:\\s*homeassistant\\s*\\n\\s*image:\\s*ghcr\\.io\\/home-assistant\\/home-assistant:\\s*(?<currentValue>v?[0-9\\.]+)"
-      ],
-      "datasourceTemplate": "docker",
-      "depNameTemplate": "ghcr.io/home-assistant/home-assistant",
-      "versioningTemplate": "semver"
-    },
+    // {
+    //   "customType": "regex",
+    //   "managerFilePatterns": [
+    //     "/homeassistant/ha-deployment\\.yaml/"
+    //   ],
+    //   "matchStrings": [
+    //     "name:\\s*homeassistant\\s*\\n\\s*image:\\s*ghcr\\.io\\/home-assistant\\/home-assistant:\\s*(?<currentValue>v?[0-9\\.]+)"
+    //   ],
+    //   "datasourceTemplate": "docker",
+    //   "depNameTemplate": "ghcr.io/home-assistant/home-assistant",
+    //   "versioningTemplate": "semver"
+    // },
     {
       "customType": "regex",
       "managerFilePatterns": [
@@ -308,30 +248,6 @@
       ],
       "datasourceTemplate": "docker",
       "depNameTemplate": "ghcr.io/linuxserver/sonarr",
-      "versioningTemplate": "regex:^v?(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?:\\.(?<revision>\\d+))?-ls(?<build>\\d+)$"
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
-        "/arr/nzbget-deployment\\.yaml/"
-      ],
-      "matchStrings": [
-        "name:\\s*nzbget\\s*\\n\\s*image:\\s*ghcr\\.io\\/linuxserver\\/nzbget:\\s*(?<currentValue>[a-zA-Z0-9\\.\\-]+)"
-      ],
-      "datasourceTemplate": "docker",
-      "depNameTemplate": "ghcr.io/linuxserver/nzbget",
-      "versioningTemplate": "regex:^v?(?<major>\\d+)\\.(?<minor>\\d+)(?:\\.(?<patch>\\d+))?(?:\\.(?<revision>\\d+))?-ls(?<build>\\d+)$"
-    },
-    {
-      "customType": "regex",
-      "managerFilePatterns": [
-        "/arr/beets-deployment\\.yaml/"
-      ],
-      "matchStrings": [
-        "name:\\s*beets\\s*\\n\\s*image:\\s*ghcr\\.io\\/linuxserver\\/beets:\\s*(?<currentValue>[a-zA-Z0-9\\.\\-]+)"
-      ],
-      "datasourceTemplate": "docker",
-      "depNameTemplate": "ghcr.io/linuxserver/beets",
       "versioningTemplate": "regex:^v?(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?:\\.(?<revision>\\d+))?-ls(?<build>\\d+)$"
     },
     {
@@ -383,40 +299,15 @@
       "versioningTemplate": "regex:^v?(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?:\\.(?<revision>\\d+))?-ls(?<build>\\d+)$"
     }
   ],
-  "packageRules": [
-    {
-      "matchPackageNames": [
-        "quay.io/ceph/ceph"
-      ],
-      "allowedVersions": "<20.0.0"
-    }
-  ],
   "argocd": {
     "enabled": true,
     "managerFilePatterns": [
       "/\\.yaml$/"
     ],
     "ignorePaths": [
-      "apps/templates/cert-manager/cert-manager\\.yaml",
-      "apps/templates/immich-app\\.yaml",
+      "cert-manager/cert-manager\\.yaml",
       "immich/immich\\.yaml",
-      "apps/templates/authentik-app\\.yaml",
-      "apps/templates/vaultwarden-app\\.yaml",
-      "apps/templates/nextcloud-app\\.yaml",
-      "apps/templates/cnpg/cnpg-clusterimagecatalog\\.yaml",
-      "apps/templates/renovate-app\\.yaml",
-      "arr/seerr-helm.yaml",
-      "apps/templates/arr\\.yaml",
-      "apps/templates/databases\\.yaml",
-      "apps/templates/grafana/garmin-grafana\\.yaml",
-      "apps/templates/grafana/grafana-app\\.yaml",
-      "apps/templates/homeassistant-app\\.yaml",
-      "apps/templates/homepage-app\\.yaml",
-      "apps/templates/lgtm\\.yaml",
-      "apps/templates/mealie\\.yaml",
-      "apps/templates/paperless\\.yaml",
-      "apps/templates/plex-app\\.yaml",
-      "apps/templates/prometheus-app\\.yaml"
+      "arr/seerr-helm.yaml"
     ]
   }
 }
