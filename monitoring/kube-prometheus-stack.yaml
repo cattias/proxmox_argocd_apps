@@ -172,6 +172,7 @@ spec:
               - -c
               - |
                 # --- Set up Environment for kubectl ---
+                apk add --no-cache coreutils
                 curl -L -o /opt/kubectl "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
                 chmod +x /opt/kubectl
 
@@ -211,7 +212,7 @@ spec:
                 OUTPUT_FILE="/var/lib/ne/custom_metrics/versions.prom"
 
                 # --- k0s Version Check ---
-                K0S_LATEST=$(curl -sSL https://api.github.com/repos/k0sproject/k0s/releases/latest | grep '"tag_name":' | head -1 | awk -F '"' '{print $4}' | tr -d 'v' | cut -d '+' -f1)
+                K0S_LATEST=$(curl -fsSL https://api.github.com/repos/k0sproject/k0s/releases/latest | grep '"tag_name":' | sed -E 's/.*"tag_name":\s*"v?([^"]+)".*/\1/' | cut -d '+' -f1 | head -1)
                 K0S_CURRENT=$(/opt/kubectl get nodes -o jsonpath="{.items[0].status.nodeInfo.kubeletVersion}" | cut -d '-' -f1 | tr -d 'v' | cut -d '+' -f1)
                 
                 # Use awk for version comparison (1 if latest > current, 0 otherwise)
@@ -224,7 +225,7 @@ spec:
                 
                 # --- ArgoCD Version Check ---
                 # Fetches the latest stable ArgoCD version tag
-                ARGOCD_LATEST=$(curl -sSL https://api.github.com/repos/argoproj/argo-cd/releases/latest | grep '"tag_name":' | head -1 | awk -F '"' '{print $4}' | tr -d 'v')
+                ARGOCD_LATEST=$(curl -fsSL https://api.github.com/repos/argoproj/argo-cd/releases/latest | grep '"tag_name":' | sed -E 's/.*"tag_name":\s*"v?([^"]+)".*/\1/' | head -1)
                 
                 # Fetches the currently installed ArgoCD version from its Kubernetes Deployment
                 ARGOCD_CURRENT=$(/opt/kubectl get deploy argocd-server -n argocd -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null | cut -d ':' -f2 | tr -d 'v')
