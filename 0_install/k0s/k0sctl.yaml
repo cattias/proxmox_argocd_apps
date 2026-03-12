@@ -1,0 +1,51 @@
+apiVersion: k0sctl.k0sproject.io/v1beta1
+kind: Cluster
+metadata:
+  name: kiki-cluster
+spec:
+  hosts:
+    # --- The Masters ---
+    - role: controller
+      ssh:
+        address: 192.168.178.175
+        user: kiki
+        keyPath: /Users/christopheattias/.ssh/id_ed25519
+    - role: controller
+      ssh:
+        address: 192.168.178.199
+        user: kiki
+        keyPath: /Users/christopheattias/.ssh/id_ed25519
+    - role: controller
+      ssh:
+        address: 192.168.178.196
+        user: kiki
+        keyPath: /Users/christopheattias/.ssh/id_ed25519
+
+    # --- The Workers ---
+    - role: worker
+      ssh:
+        address: 192.168.178.72
+        user: kiki
+        keyPath: /Users/christopheattias/.ssh/id_ed25519
+    - role: worker
+      ssh:
+        address: 192.168.178.223
+        user: kiki
+        keyPath: /Users/christopheattias/.ssh/id_ed25519
+    - role: worker
+      ssh:
+        address: 192.168.178.15
+        user: kiki
+        keyPath: /Users/christopheattias/.ssh/id_ed25519
+
+  k0s:
+    version: v1.35.1+k0s.0
+    config:
+      spec:
+        api:
+          # Use the IP of Master-01 as the initial access point
+          externalAddress: 192.168.178.175 
+          sans:
+            - 192.168.178.175
+            - 192.168.178.199
+            - 192.168.178.196
