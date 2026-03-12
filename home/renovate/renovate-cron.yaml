@@ -14,7 +14,7 @@ spec:
         spec:
           containers:
             - name: renovate
-              image: renovate/renovate:43.65.0
+              image: renovate/renovate:43.66.0
               # Environment Variables
               env:
                 - name: LOG_LEVEL
