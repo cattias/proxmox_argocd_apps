@@ -57,6 +57,7 @@ spec:
                 - "100.64.0.2/32"
                 - "127.0.0.1/32"
                 - "10.244.0.0/16"
+                - "10.96.0.0/12"
               insecure: false
             transport:
               respondingTimeouts:
@@ -76,6 +77,7 @@ spec:
                 - "100.64.0.2/32"
                 - "127.0.0.1/32"
                 - "10.244.0.0/16"
+                - "10.96.0.0/12"
               insecure: false
             transport:
               respondingTimeouts:
