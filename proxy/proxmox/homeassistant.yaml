@@ -25,7 +25,6 @@ spec:
       services:
         - name: hass-service
           port: 8123
-          passHostHeader: true
       priority: 10
   tls:
     certResolver: le
