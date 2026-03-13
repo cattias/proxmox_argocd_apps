@@ -39,9 +39,19 @@ spec:
         keyPath: /Users/christopheattias/.ssh/id_ed25519
 
   k0s:
-    version: v1.35.1+k0s.0
+    version: v1.35.1+k0s.1
     config:
       spec:
+        # network:
+        #   controlPlaneLoadBalancing:
+        #     enabled: true
+        #     type: Keepalived
+        #     keepalived:
+        #       vrrpInstances:
+        #       - virtualIPs: ["192.168.178.0/24"]
+        #   nodeLocalLoadBalancing:
+        #     enabled: true
+        #     type: EnvoyProxy
         api:
           # Use the IP of Master-01 as the initial access point
           externalAddress: 192.168.178.175 
