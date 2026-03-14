@@ -42,19 +42,19 @@ spec:
     version: v1.35.1+k0s.1
     config:
       spec:
-        # network:
-        #   controlPlaneLoadBalancing:
-        #     enabled: true
-        #     type: Keepalived
-        #     keepalived:
-        #       vrrpInstances:
-        #       - virtualIPs: ["192.168.178.0/24"]
-        #   nodeLocalLoadBalancing:
-        #     enabled: true
-        #     type: EnvoyProxy
+        network:
+          # controlPlaneLoadBalancing:
+          #   enabled: true
+          #   type: Keepalived
+          #   keepalived:
+          #     vrrpInstances:
+          #     - virtualIPs: ["192.168.178.0/24"]
+          nodeLocalLoadBalancing:
+            enabled: true
+            type: EnvoyProxy
         api:
           # Use the IP of Master-01 as the initial access point
-          externalAddress: 192.168.178.175 
+          # externalAddress: 192.168.178.175 
           sans:
             - 192.168.178.175
             - 192.168.178.199
