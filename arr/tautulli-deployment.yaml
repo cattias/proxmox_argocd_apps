@@ -31,6 +31,9 @@ spec:
           - name: tautulli-config-ini
             mountPath: /tmp/config.ini
             subPath: config.ini
+          - mountPath: /config/backups
+            name: backup-volume
+            subPath: arr/tautulli
       containers:
         - env:
             - name: PGID
@@ -55,3 +58,6 @@ spec:
         - configMap:
             name: tautulli-config
           name: tautulli-config-ini
+        - name: backup-volume
+          persistentVolumeClaim:
+            claimName: arr-backup-pvc
