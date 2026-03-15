@@ -130,6 +130,18 @@
     //   "depNameTemplate": "ghcr.io/paperless-ngx/paperless-ngx",
     //   "versioningTemplate": "semver"
     // },
+    // {
+    //   "customType": "regex",
+    //   "managerFilePatterns": [
+    //     "/paperless/paperless\\.redis\\.yaml/"
+    //   ],
+    //   "matchStrings": [
+    //     "kubernetesConfig:\\s*\\n\\s*image:\\s*quay\\.io\\/opstree\\/redis:(?<currentValue>v?[0-9\\.]+)"
+    //   ],
+    //   "datasourceTemplate": "docker",
+    //   "depNameTemplate": "quay.io/opstree/redis",
+    //   "versioningTemplate": "semver"
+    // },
     {
       "customType": "regex",
       "managerFilePatterns": [
@@ -178,18 +190,6 @@
       "depNameTemplate": "quay.io/opstree/redis",
       "versioningTemplate": "semver"
     },
-    // {
-    //   "customType": "regex",
-    //   "managerFilePatterns": [
-    //     "/paperless/paperless\\.redis\\.yaml/"
-    //   ],
-    //   "matchStrings": [
-    //     "kubernetesConfig:\\s*\\n\\s*image:\\s*quay\\.io\\/opstree\\/redis:(?<currentValue>v?[0-9\\.]+)"
-    //   ],
-    //   "datasourceTemplate": "docker",
-    //   "depNameTemplate": "quay.io/opstree/redis",
-    //   "versioningTemplate": "semver"
-    // },
     {
       "customType": "regex",
       "managerFilePatterns": [
@@ -226,18 +226,6 @@
       "depNameTemplate": "remirigal/plex-auto-languages",
       "versioningTemplate": "semver"
     },
-    // {
-    //   "customType": "regex",
-    //   "managerFilePatterns": [
-    //     "/homeassistant/ha-deployment\\.yaml/"
-    //   ],
-    //   "matchStrings": [
-    //     "name:\\s*homeassistant\\s*\\n\\s*image:\\s*ghcr\\.io\\/home-assistant\\/home-assistant:\\s*(?<currentValue>v?[0-9\\.]+)"
-    //   ],
-    //   "datasourceTemplate": "docker",
-    //   "depNameTemplate": "ghcr.io/home-assistant/home-assistant",
-    //   "versioningTemplate": "semver"
-    // },
     {
       "customType": "regex",
       "managerFilePatterns": [
@@ -309,5 +297,12 @@
       "immich/immich\\.yaml",
       "arr/seerr-helm.yaml"
     ]
-  }
+  },
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true
+    }
+  ]
 }
