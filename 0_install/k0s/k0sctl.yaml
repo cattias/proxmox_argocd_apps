@@ -39,7 +39,7 @@ spec:
         keyPath: /Users/christopheattias/.ssh/id_ed25519
 
   k0s:
-    version: v1.35.1+k0s.1
+    version: v1.35.2+k0s.0
     config:
       spec:
         network:
