@@ -3,7 +3,7 @@
   hosts: all_nodes
   remote_user: kiki
   become: true
-  serial: 1 
+  # serial: 1 
   
   tasks:
     - name: "Update APT Cache"
