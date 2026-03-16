@@ -8,18 +8,11 @@ sudo lvextend -l +100%FREE /dev/ubuntu-vg/ubuntu-lv
 sudo resize2fs /dev/ubuntu-vg/ubuntu-lv
 
 sudo apt update && sudo apt install -y cloud-init qemu-guest-agent && sudo apt upgrade -y
-# sudo systemctl enable --now qemu-guest-agent
 
 # set healthchecks
 # see specific script
 
-# on the workers
-kubectl label node k0s-worker-05 topology.kubernetes.io/region=pvemaster
-kubectl label node k0s-worker-05 topology.kubernetes.io/zone=pvemaster
-
 curl -fsSL https://tailscale.com/install.sh | sh
-# Workers
-sudo tailscale up --login-server=https://tailscale.attias.io --accept-dns=false --accept-routes=false
 # Masters
 sudo tailscale up --login-server=https://tailscale.attias.io --accept-dns=false --accept-routes=false --advertise-routes=192.168.178.0/24
 # All
