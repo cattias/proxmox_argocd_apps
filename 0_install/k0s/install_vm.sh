@@ -14,12 +14,8 @@ sudo resize2fs /dev/ubuntu-vg/ubuntu-lv
 # see specific script
 
 # on the workers
-kubectl label node k0s-worker-01 topology.kubernetes.io/region=pvemaster
-kubectl label node k0s-worker-01 topology.kubernetes.io/zone=pvemaster
-kubectl label node k0s-worker-02 topology.kubernetes.io/region=pvemaster
-kubectl label node k0s-worker-02 topology.kubernetes.io/zone=pvemaster
-kubectl label node k0s-worker-03 topology.kubernetes.io/region=pvemaster
-kubectl label node k0s-worker-03 topology.kubernetes.io/zone=pvemaster
+kubectl label node k0s-worker-04 topology.kubernetes.io/region=pvemaster
+kubectl label node k0s-worker-04 topology.kubernetes.io/zone=pvemaster
 
 curl -fsSL https://tailscale.com/install.sh | sh
 # Workers
@@ -51,7 +47,7 @@ sudo systemctl daemon-reload
 sudo systemctl start glancesweb
 sudo systemctl enable glancesweb
 
-
+# on master only for fwd with routes + optimisation
 sudo sysctl -w net.ipv4.ip_forward=1
 sudo sysctl -w net.ipv6.conf.all.forwarding=1
 echo "net.ipv4.ip_forward = 1" | sudo tee /etc/sysctl.d/99-tailscale.conf

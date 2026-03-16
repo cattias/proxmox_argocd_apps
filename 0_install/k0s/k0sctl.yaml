@@ -37,6 +37,11 @@ spec:
         address: 192.168.178.15
         user: kiki
         keyPath: /Users/christopheattias/.ssh/id_ed25519
+    - role: worker
+      ssh:
+        address: 192.168.178.149
+        user: kiki
+        keyPath: /Users/christopheattias/.ssh/id_ed25519
 
   k0s:
     version: v1.35.2+k0s.0
@@ -53,8 +58,6 @@ spec:
             enabled: true
             type: EnvoyProxy
         api:
-          # Use the IP of Master-01 as the initial access point
-          # externalAddress: 192.168.178.175 
           sans:
             - 192.168.178.175
             - 192.168.178.199
