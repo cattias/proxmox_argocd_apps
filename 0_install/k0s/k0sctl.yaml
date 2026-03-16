@@ -42,6 +42,11 @@ spec:
         address: 192.168.178.149
         user: kiki
         keyPath: /Users/christopheattias/.ssh/id_ed25519
+    - role: worker
+      ssh:
+        address: 192.168.178.204
+        user: kiki
+        keyPath: /Users/christopheattias/.ssh/id_ed25519
 
   k0s:
     version: v1.35.2+k0s.0

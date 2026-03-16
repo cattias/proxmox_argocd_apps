@@ -4,18 +4,18 @@ sudo chmod 0440 /etc/sudoers.d/kiki
 sudo swapoff -a
 sudo sed -i '/swap/ s/^/#/' /etc/fstab
 
-sudo apt update && sudo apt install -y cloud-init qemu-guest-agent && sudo apt upgrade -y
-# sudo systemctl enable --now qemu-guest-agent
-
 sudo lvextend -l +100%FREE /dev/ubuntu-vg/ubuntu-lv
 sudo resize2fs /dev/ubuntu-vg/ubuntu-lv
+
+sudo apt update && sudo apt install -y cloud-init qemu-guest-agent && sudo apt upgrade -y
+# sudo systemctl enable --now qemu-guest-agent
 
 # set healthchecks
 # see specific script
 
 # on the workers
-kubectl label node k0s-worker-04 topology.kubernetes.io/region=pvemaster
-kubectl label node k0s-worker-04 topology.kubernetes.io/zone=pvemaster
+kubectl label node k0s-worker-05 topology.kubernetes.io/region=pvemaster
+kubectl label node k0s-worker-05 topology.kubernetes.io/zone=pvemaster
 
 curl -fsSL https://tailscale.com/install.sh | sh
 # Workers
