@@ -1,0 +1,71 @@
+---
+- name: 1. Prepare Storage
+  hosts: pvemaster_host
+  become: true
+  tasks:
+    - name: Unset Ceph maintenance flags
+      ansible.builtin.command: "{{ item }}"
+      loop:
+        - ceph osd unset noout
+        - ceph osd unset norecover
+
+    - name: Wait for Ceph to be healthy
+      ansible.builtin.command: ceph health
+      register: ceph_health
+      until: "'HEALTH_OK' in ceph_health.stdout or 'HEALTH_WARN' in ceph_health.stdout"
+      retries: 10
+      delay: 10
+
+- name: 2. Start Master VMs
+  hosts: pvemaster_host
+  become: true
+  tasks:
+    - name: Power on k0s Masters
+      ansible.builtin.command: "qm start {{ item }}"
+      loop:
+        - 112
+        - 100
+        - 101
+    
+    - name: Pause for Control Plane stabilization
+      ansible.builtin.pause:
+        seconds: 60
+
+- name: 3.a Start Worker VMs on master
+  hosts: pvemaster_host
+  become: true
+  tasks:
+    - name: Power on k0s Workers
+      ansible.builtin.command: "qm start {{ item }}"
+      loop:
+        - 103
+        - 104
+        - 106
+
+- name: 3.b Start Worker VMs on lenovo
+  hosts: pvelenovo_host
+  become: true
+  tasks:
+    - name: Power on k0s Workers
+      ansible.builtin.command: "qm start {{ item }}"
+      loop:
+        - 113
+
+- name: 3.c Start Worker VMs on node
+  hosts: pvenode_host
+  become: true
+  tasks:
+    - name: Power on k0s Workers
+      ansible.builtin.command: "qm start {{ item }}"
+      loop:
+        - 102
+
+- name: 4. Verify k0s Service
+  hosts: masters:workers
+  become: true
+  tasks:
+    - name: Ensure k0s is running
+      ansible.builtin.systemd:
+        name: k0s
+        state: started
+        enabled: yes
