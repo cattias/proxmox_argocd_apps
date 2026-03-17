@@ -1,0 +1,37 @@
+---
+- name: Safe stop of k0s masters and workers for Proxmox reboot
+  hosts: workers:masters
+  become: true
+  serial: 1 
+
+  tasks:
+    - name: Stop k0s service gracefully
+      ansible.builtin.command: k0s stop
+      ignore_errors: true # In case k0s is already stopped
+
+    - name: Flush filesystem buffers
+      ansible.builtin.command: sync
+
+    - name: Shut down the node
+      ansible.builtin.command: /sbin/shutdown -h now
+      async: 1 # Run asynchronously so Ansible doesn't wait for a response that never comes
+      poll: 0
+
+- name: Set Ceph Maintenance Flags on Proxmox Master
+  hosts: pvemaster_host
+  become: true
+  
+  tasks:
+    - name: Set Ceph noout flag
+      ansible.builtin.command: ceph osd set noout
+      
+    - name: Set Ceph norecover flag
+      ansible.builtin.command: ceph osd set norecover
+
+    - name: Confirm Ceph status
+      ansible.builtin.command: ceph -s
+      register: ceph_status
+
+    - name: Display Ceph Status
+      ansible.builtin.debug:
+        var: ceph_status.stdout_lines
