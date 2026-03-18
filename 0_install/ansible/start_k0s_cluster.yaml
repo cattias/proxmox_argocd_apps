@@ -26,7 +26,11 @@
         - 112
         - 100
         - 101
-    
+      register: master_start
+      failed_when: 
+        - master_start.rc != 0 
+        - "'already running' not in master_start.stderr"    
+
     - name: Pause for Control Plane stabilization
       ansible.builtin.pause:
         seconds: 60
@@ -41,15 +45,11 @@
         - 103
         - 104
         - 106
-
-- name: 3.b Start Worker VMs on lenovo
-  hosts: pvelenovo_host
-  become: true
-  tasks:
-    - name: Power on k0s Workers
-      ansible.builtin.command: "qm start {{ item }}"
-      loop:
         - 113
+      register: worker_start
+      failed_when: 
+        - worker_start.rc != 0 
+        - "'already running' not in worker_start.stderr"
 
 - name: 3.c Start Worker VMs on node
   hosts: pvenode_host
@@ -59,6 +59,10 @@
       ansible.builtin.command: "qm start {{ item }}"
       loop:
         - 102
+      register: worker_start
+      failed_when: 
+        - worker_start.rc != 0 
+        - "'already running' not in worker_start.stderr"
 
 - name: 4. Verify k0s Service
   hosts: masters:workers
@@ -66,6 +70,7 @@
   tasks:
     - name: Ensure k0s is running
       ansible.builtin.systemd:
-        name: k0s
+        # Use 'k0scontroller' for masters and 'k0sworker' for workers
+        name: "{{ 'k0scontroller' if inventory_hostname in groups['masters'] else 'k0sworker' }}"
         state: started
         enabled: yes
