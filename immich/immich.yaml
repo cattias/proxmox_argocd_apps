@@ -29,6 +29,7 @@ spec:
             containers:
               main:
                 image:
+                  repository: ghcr.io/immich-app/immich-server
                   tag: v2.6.0
                 env:
                   - name: REDIS_HOSTNAME
