@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: k8up
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  syncPolicy:
+    automated:
+      prune: true
+      enabled: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  destination:
+    namespace: admin
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    repoURL: https://k8up-io.github.io/k8up
+    targetRevision: 4.8.7
+    chart: k8up
+    helm:
+      valuesObject:
+        metrics:
+          serviceMonitor:
+            enabled: true
+            namespace: monitoring
+            additionalLabels: 
+              release: kube-prometheus-stack
+          prometheusRule:
+            enabled: true
+            namespace: monitoring
+            additionalLabels: 
+              release: kube-prometheus-stack
