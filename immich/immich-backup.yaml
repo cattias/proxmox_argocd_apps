@@ -9,6 +9,8 @@ spec:
     failedJobsHistoryLimit: 2
     successfulJobsHistoryLimit: 2
     concurrentRunsAllowed: false
+    podConfigRef:
+      name: nas-backup-pod-config
     labelSelectors:
       - matchExpressions:
         - key: backup
@@ -35,3 +37,14 @@ spec:
       keepDaily: 7
       keepWeekly: 4
       keepMonthly: 6
+---
+apiVersion: k8up.io/v1
+kind: PodConfig
+metadata:
+  name: nas-backup-pod-config
+  namespace: photos
+spec:
+  securityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
