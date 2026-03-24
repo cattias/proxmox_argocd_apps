@@ -4,32 +4,28 @@ metadata:
   name: immich-nfs-backup
   namespace: photos
 spec:
-  backend:
-    repoPasswordSecretRef:
-      name: backup-repo-secret
-      key: password
-    local:
-      # This is the path INSIDE the backup pod where the PVC is mounted
-      mountPath: "/mnt/backup-repository"
-    # We must tell k8up to mount your NAS PVC into the backup job pod
-    volumeMounts:
-      - name: nas-repo
-        mountPath: "/mnt/backup-repository"
-        subPath: immich_restic
-    volumes:
-      - name: nas-repo
-        persistentVolumeClaim:
-          claimName: immich-backup-pvc
   backup:
     schedule: "0 3 * * *" # Runs daily at 3:00 AM
     failedJobsHistoryLimit: 2
     successfulJobsHistoryLimit: 2
-    # This ensures only the Immich library is targeted
-    backupTemplate:
-      storage:
-        pvc:
-          claimName: immich-library-pvc
-  # Recommended: Clean up old backups so your NAS doesn't fill up
+    concurrentRunsAllowed: false
+    labelSelectors:
+      matchLabels:
+        backup: "true"
+    backend:
+      repoPasswordSecretRef:
+        name: backup-repo-secret
+        key: password
+      local:
+        mountPath: "/mnt/backup-repository"
+      volumeMounts:
+        - name: nas-repo
+          mountPath: "/mnt/backup-repository"
+          subPath: immich_restic
+    volumes:
+      - name: nas-repo
+        persistentVolumeClaim:
+          claimName: immich-backup-pvc
   prune:
     schedule: "0 4 * * 0" # Every Sunday at 4:00 AM
     retention:

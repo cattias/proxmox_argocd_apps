@@ -3,6 +3,8 @@ kind: PersistentVolumeClaim
 metadata:
   name: immich-library-pvc
   namespace: photos
+  labels:
+    backup: "true"
 spec:
   accessModes:
     - ReadWriteOnce
