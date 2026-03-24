@@ -10,8 +10,11 @@ spec:
     successfulJobsHistoryLimit: 2
     concurrentRunsAllowed: false
     labelSelectors:
-      - matchLabels:
-        - backup: "true"
+      - matchExpressions:
+        - key: backup
+          operator: In
+          values:
+            - "true"
     backend:
       repoPasswordSecretRef:
         name: backup-repo-secret
