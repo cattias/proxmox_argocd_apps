@@ -9,8 +9,8 @@ spec:
     failedJobsHistoryLimit: 2
     successfulJobsHistoryLimit: 2
     concurrentRunsAllowed: false
-    labelSelector:
-      matchLabels:
+    labelSelectors:
+      - matchLabels:
         backup: "true"
     backend:
       repoPasswordSecretRef:
