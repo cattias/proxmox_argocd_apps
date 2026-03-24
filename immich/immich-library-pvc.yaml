@@ -5,7 +5,8 @@ metadata:
   namespace: photos
   labels:
     backup: "true"
-    k8up.io/backup-restic-args: "[\"--exclude\", \"/data/immich-library-pvc/lost+found\"]"
+  annotations:
+    k8up.io/backup-restic-args: '["--exclude", "/data/immich-library-pvc/lost+found"]'
 spec:
   accessModes:
     - ReadWriteOnce
