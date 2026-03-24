@@ -11,7 +11,7 @@ spec:
     concurrentRunsAllowed: false
     labelSelectors:
       - matchLabels:
-        backup: "true"
+        - backup: "true"
     backend:
       repoPasswordSecretRef:
         name: backup-repo-secret
