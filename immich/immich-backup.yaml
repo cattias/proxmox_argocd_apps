@@ -9,6 +9,7 @@ spec:
     failedJobsHistoryLimit: 2
     successfulJobsHistoryLimit: 2
     concurrentRunsAllowed: false
+    promURL: http://prometheus-pushgateway.monitoring.svc.cluster.local:9091
     podConfigRef:
       name: nas-backup-pod-config
     labelSelectors:
