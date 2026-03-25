@@ -88,7 +88,7 @@
         "/immich/immich\\.yaml/"
       ],
       "matchStrings": [
-        "main:\\s*\\n\\s*image:\\s*\\n\\s*tag:\\s*(?<currentValue>v?[0-9\\.]+)"
+        "main:\\s*\\n\\s*image:\\s*\\n\\s*repository:\\s*ghcr\\.io\\/immich-app\\/immich-server\\s*\\n\\s*tag:\\s*(?<currentValue>v?[0-9\\.]+)"
       ],
       "datasourceTemplate": "docker",
       "depNameTemplate": "ghcr.io/immich-app/immich-server",
