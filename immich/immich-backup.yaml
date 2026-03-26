@@ -5,7 +5,8 @@ metadata:
   namespace: photos
 spec:
   backup:
-    schedule: "5 0 * * *" # Runs daily at 3:00 AM
+    suspend: true
+    schedule: "5 0 * * *"
     failedJobsHistoryLimit: 2
     successfulJobsHistoryLimit: 2
     concurrentRunsAllowed: false
@@ -33,7 +34,7 @@ spec:
         persistentVolumeClaim:
           claimName: immich-backup-pvc
   prune:
-    schedule: "0 4 * * 0" # Every Sunday at 4:00 AM
+    schedule: "0 4 * * 0"
     retention:
       keepDaily: 7
       keepWeekly: 4
