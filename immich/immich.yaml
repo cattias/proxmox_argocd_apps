@@ -62,9 +62,9 @@ spec:
             storageClass: proxmox-ceph
         server:
           enabled: true
-          # controllers:
-          #   main:
-          #     strategy: Recreate
+          controllers:
+            main:
+              strategy: Recreate
           service:
             main:
               type: LoadBalancer
