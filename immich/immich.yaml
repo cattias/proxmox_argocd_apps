@@ -14,6 +14,7 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+      - Replace=true
   destination:
     namespace: photos
     server: https://kubernetes.default.svc
@@ -26,7 +27,6 @@ spec:
       valuesObject:
         controllers:
           main:
-            # strategy: Recreate
             containers:
               main:
                 image:
@@ -62,16 +62,9 @@ spec:
             storageClass: proxmox-ceph
         server:
           enabled: true
-          controllers:
-            main:
-              strategy: Recreate
           service:
             main:
               type: LoadBalancer
               targetPort: 2283
         machine-learning:
           enabled: true
-          # controllers:
-          #   main:
-          #     strategy: Recreate
-
