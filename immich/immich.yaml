@@ -62,16 +62,16 @@ spec:
             storageClass: proxmox-ceph
         server:
           enabled: true
-          controllers:
-            main:
-              strategy: Recreate
+          # controllers:
+          #   main:
+          #     strategy: Recreate
           service:
             main:
               type: LoadBalancer
               targetPort: 2283
         machine-learning:
           enabled: true
-          controllers:
-            main:
-              strategy: Recreate
+          # controllers:
+          #   main:
+          #     strategy: Recreate
 
