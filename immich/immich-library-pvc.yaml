@@ -4,7 +4,7 @@ metadata:
   name: immich-library-pvc
   namespace: photos
   labels:
-    backup: "false"
+    backup: "true"
   annotations:
     k8up.io/backup-restic-args: '["--exclude", "/data/immich-library-pvc/lost+found"]'
 spec:
