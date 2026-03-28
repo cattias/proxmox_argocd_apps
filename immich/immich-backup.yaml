@@ -1,58 +1,58 @@
-# apiVersion: k8up.io/v1
-# kind: Schedule
-# metadata:
-#   name: immich-nfs-backup
-#   namespace: photos
-# spec:
-#   backup:
-#     schedule: "5 0 * * *"
-#     failedJobsHistoryLimit: 2
-#     successfulJobsHistoryLimit: 2
-#     concurrentRunsAllowed: false
-#     promURL: http://prometheus-pushgateway.monitoring.svc.cluster.local:9091
-#     labelSelectors:
-#       - matchExpressions:
-#         - key: backup
-#           operator: In
-#           values:
-#             - "true"
-#     volumes:
-#       - name: nas-repo
-#         persistentVolumeClaim:
-#           claimName: immich-backup-pvc
-#   prune:
-#     schedule: "0 4 * * 0"
-#     retention:
-#       keepDaily: 7
-#       keepWeekly: 4
-#       keepMonthly: 6
-#     volumes:
-#       - name: nas-repo
-#         persistentVolumeClaim:
-#           claimName: immich-backup-pvc
-#   podConfigRef:
-#     name: nas-backup-pod-config
-#   backend:
-#     repoPasswordSecretRef:
-#       name: backup-repo-secret
-#       key: password
-#     local:
-#       mountPath: "/mnt/backup-repository"
-#     volumeMounts:
-#       - name: nas-repo
-#         mountPath: "/mnt/backup-repository"
-#         subPath: immich_restic
-# ---
-# apiVersion: k8up.io/v1
-# kind: PodConfig
-# metadata:
-#   name: nas-backup-pod-config
-#   namespace: photos
-# spec:
-#   template:
-#     spec:
-#       containers:
-#         - name: backup-immich
-#           securityContext:
-#             runAsUser: 1000
-#             runAsGroup: 1000
+apiVersion: k8up.io/v1
+kind: Schedule
+metadata:
+  name: immich-nfs-backup
+  namespace: photos
+spec:
+  backup:
+    schedule: "5 0 * * *"
+    failedJobsHistoryLimit: 2
+    successfulJobsHistoryLimit: 2
+    concurrentRunsAllowed: false
+    promURL: http://prometheus-pushgateway.monitoring.svc.cluster.local:9091
+    labelSelectors:
+      - matchExpressions:
+        - key: backup
+          operator: In
+          values:
+            - "true"
+    volumes:
+      - name: nas-repo
+        persistentVolumeClaim:
+          claimName: immich-backup-pvc
+  prune:
+    schedule: "0 4 * * 0"
+    retention:
+      keepDaily: 7
+      keepWeekly: 4
+      keepMonthly: 6
+    volumes:
+      - name: nas-repo
+        persistentVolumeClaim:
+          claimName: immich-backup-pvc
+  podConfigRef:
+    name: nas-backup-pod-config
+  backend:
+    repoPasswordSecretRef:
+      name: backup-repo-secret
+      key: password
+    local:
+      mountPath: "/mnt/backup-repository"
+    volumeMounts:
+      - name: nas-repo
+        mountPath: "/mnt/backup-repository"
+        subPath: immich_restic
+---
+apiVersion: k8up.io/v1
+kind: PodConfig
+metadata:
+  name: nas-backup-pod-config
+  namespace: photos
+spec:
+  template:
+    spec:
+      containers:
+        - name: backup-immich
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
