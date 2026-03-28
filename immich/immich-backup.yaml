@@ -10,28 +10,28 @@ spec:
     successfulJobsHistoryLimit: 2
     concurrentRunsAllowed: false
     promURL: http://prometheus-pushgateway.monitoring.svc.cluster.local:9091
-    podConfigRef:
-      name: nas-backup-pod-config
     labelSelectors:
       - matchExpressions:
         - key: backup
           operator: In
           values:
             - "true"
-    backend:
-      repoPasswordSecretRef:
-        name: backup-repo-secret
-        key: password
-      local:
-        mountPath: "/mnt/backup-repository"
-      volumeMounts:
-        - name: nas-repo
-          mountPath: "/mnt/backup-repository"
-          subPath: immich_restic
-    volumes:
+  podConfigRef:
+    name: nas-backup-pod-config
+  backend:
+    repoPasswordSecretRef:
+      name: backup-repo-secret
+      key: password
+    local:
+      mountPath: "/mnt/backup-repository"
+    volumeMounts:
       - name: nas-repo
-        persistentVolumeClaim:
-          claimName: immich-backup-pvc
+        mountPath: "/mnt/backup-repository"
+        subPath: immich_restic
+  volumes:
+    - name: nas-repo
+      persistentVolumeClaim:
+        claimName: immich-backup-pvc
   prune:
     schedule: "0 4 * * 0"
     retention:
