@@ -24,6 +24,10 @@ spec:
         key: password
       local:
         mountPath: "/mnt/backup-repository"
+      volumeMounts:
+        - name: nas-repo
+          mountPath: "/mnt/backup-repository"
+          subPath: immich_restic
     volumes:
       - name: nas-repo
         persistentVolumeClaim:
@@ -42,10 +46,10 @@ spec:
         key: password
       local:
         mountPath: "/mnt/backup-repository"
-    volumeMounts:
-      - name: nas-repo
-        mountPath: "/mnt/backup-repository"
-        subPath: immich_restic
+      volumeMounts:
+        - name: nas-repo
+          mountPath: "/mnt/backup-repository"
+          subPath: immich_restic
     volumes:
       - name: nas-repo
         persistentVolumeClaim:
