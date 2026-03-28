@@ -16,20 +16,32 @@ spec:
           operator: In
           values:
             - "true"
+    podConfigRef:
+      name: nas-backup-pod-config
+    backend:
+      repoPasswordSecretRef:
+        name: backup-repo-secret
+        key: password
+      local:
+        mountPath: "/mnt/backup-repository"
+    volumes:
+      - name: nas-repo
+        persistentVolumeClaim:
+          claimName: immich-backup-pvc
   prune:
     schedule: "0 4 * * 0"
     retention:
       keepDaily: 7
       keepWeekly: 4
       keepMonthly: 6
-  podConfigRef:
-    name: nas-backup-pod-config
-  backend:
-    repoPasswordSecretRef:
-      name: backup-repo-secret
-      key: password
-    local:
-      mountPath: "/mnt/backup-repository"
+    podConfigRef:
+      name: nas-backup-pod-config
+    backend:
+      repoPasswordSecretRef:
+        name: backup-repo-secret
+        key: password
+      local:
+        mountPath: "/mnt/backup-repository"
     volumeMounts:
       - name: nas-repo
         mountPath: "/mnt/backup-repository"
