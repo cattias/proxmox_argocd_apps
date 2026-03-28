@@ -5,7 +5,7 @@ metadata:
   namespace: photos
 spec:
   backup:
-    schedule: "5 0 * * *"
+    schedule: "5 7 * * *"
     failedJobsHistoryLimit: 2
     successfulJobsHistoryLimit: 2
     concurrentRunsAllowed: false
