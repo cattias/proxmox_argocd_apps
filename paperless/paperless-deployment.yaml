@@ -1,0 +1,107 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paperless-ngx
+  namespace: documents
+  labels:
+    app: paperless-ngx
+spec:
+  revisionHistoryLimit: 1
+  replicas: 1
+  selector:
+    matchLabels:
+      app: paperless-ngx
+  template:
+    metadata:
+      labels:
+        app: paperless-ngx
+        app.kubernetes.io/name: paperless
+    spec:
+      containers:
+      - name: paperless-ngx
+        image: ghcr.io/paperless-ngx/paperless-ngx:2.20.10
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+          name: http
+        
+        env:
+        # Database Configuration sourced from operator-managed Secret
+        - name: PAPERLESS_DBENGINE
+          value: postgresql
+        - name: PAPERLESS_DBHOST
+          valueFrom:
+            secretKeyRef:
+              name: paperless-db-app
+              key: host 
+        - name: PAPERLESS_DBNAME
+          valueFrom:
+            secretKeyRef:
+              name: paperless-db-app
+              key: dbname 
+        - name: PAPERLESS_DBUSER
+          valueFrom:
+            secretKeyRef:
+              name: paperless-db-app
+              key: user 
+        - name: PAPERLESS_DBPASS
+          valueFrom:
+            secretKeyRef:
+              name: paperless-db-app
+              key: password 
+        - name: PAPERLESS_DBPORT
+          value: "5432" 
+        
+        - name: PAPERLESS_REDIS
+          value: redis://paperless-redis:6379
+
+        - name: PAPERLESS_URL
+          value: https://paperless.attias.io
+        
+        # Essential Paperless Settings & combined data/media volume
+        - name: USER_UID
+          value: "1000"
+        - name: GROUP_GID
+          value: "1000"
+        - name: PAPERLESS_DATA_DIR
+          value: "/data"
+        - name: PAPERLESS_MEDIA_ROOT
+          value: "/media"
+
+        - name: PAPERLESS_ENABLE_ALLAUTH
+          value: "true"
+        - name: PAPERLESS_APPS
+          value: "allauth.socialaccount.providers.openid_connect"
+        - name: PAPERLESS_SOCIALACCOUNT_PROVIDERS
+          valueFrom:
+            secretKeyRef:
+              name: paperless-openid-secret
+              key: authentik 
+        - name: PAPERLESS_AUTO_LOGIN
+          value: "true"
+        - name: PAPERLESS_AUTO_CREATE
+          value: "true"
+        - name: PAPERLESS_LOGOUT_REDIRECT_URL
+          value: "https://authentik.attias.io/application/o/paperless-ngx/end-session/"
+
+        - name: PAPERLESS_DISABLE_REGULAR_LOGIN
+          value: "true"
+        - name: PAPERLESS_REDIRECT_LOGIN_TO_SSO
+          value: "true"
+
+        volumeMounts:
+        - name: media-volume
+          mountPath: /media
+          subPath: documents/paperless/media
+        - name: media-volume
+          mountPath: /data 
+          subPath: documents/paperless/data
+        - name: media-volume
+          mountPath: /consume
+          subPath: documents/paperless/consume
+
+      volumes:
+      - name: media-volume
+        persistentVolumeClaim:
+          claimName: paperless-media-pvc

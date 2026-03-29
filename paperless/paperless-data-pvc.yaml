@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: paperless-media-pv
+spec:
+  capacity:
+    storage: 10Ti
+  accessModes: [ReadWriteMany]
+  persistentVolumeReclaimPolicy: Retain
+  csi:
+    driver: nfs.csi.k8s.io
+    volumeHandle: paperless-nas-media-share
+    volumeAttributes:
+      server: 192.168.178.219
+      share: /volume1/media
+  mountOptions:
+    # - nfsvers=4.1
+    - hard
+    - noac
+    - timeo=600
+    - retrans=2
+    - noatime
+    - tcp
+    - nolock
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: paperless-media-pvc
+  namespace: documents
+spec:
+  accessModes: [ReadWriteMany]
+  resources:
+    requests:
+      storage: 10Ti
+  volumeName: paperless-media-pv
+  storageClassName: ""
