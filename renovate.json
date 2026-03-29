@@ -118,30 +118,42 @@
       "depNameTemplate": "ghcr.io/druggeri/nut_exporter",
       "versioningTemplate": "semver"
     },
-    // {
-    //   "customType": "regex",
-    //   "managerFilePatterns": [
-    //     "/paperless/paperless-deployment\\.yaml/"
-    //   ],
-    //   "matchStrings": [
-    //     "name:\\s*paperless-ngx\\s*\\n\\s*image:\\s*ghcr\\.io\\/paperless-ngx\\/paperless-ngx:\\s*(?<currentValue>v?[0-9\\.]+)"
-    //   ],
-    //   "datasourceTemplate": "docker",
-    //   "depNameTemplate": "ghcr.io/paperless-ngx/paperless-ngx",
-    //   "versioningTemplate": "semver"
-    // },
-    // {
-    //   "customType": "regex",
-    //   "managerFilePatterns": [
-    //     "/paperless/paperless\\.redis\\.yaml/"
-    //   ],
-    //   "matchStrings": [
-    //     "kubernetesConfig:\\s*\\n\\s*image:\\s*quay\\.io\\/opstree\\/redis:(?<currentValue>v?[0-9\\.]+)"
-    //   ],
-    //   "datasourceTemplate": "docker",
-    //   "depNameTemplate": "quay.io/opstree/redis",
-    //   "versioningTemplate": "semver"
-    // },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/paperless/paperless-deployment\\.yaml/"
+      ],
+      "matchStrings": [
+        "name:\\s*paperless-ngx\\s*\\n\\s*image:\\s*ghcr\\.io\\/paperless-ngx\\/paperless-ngx:\\s*(?<currentValue>v?[0-9\\.]+)"
+      ],
+      "datasourceTemplate": "docker",
+      "depNameTemplate": "ghcr.io/paperless-ngx/paperless-ngx",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/paperless/paperless-ai\\.yaml/"
+      ],
+      "matchStrings": [
+        "name:\\s*paperless-ai\\s*\\n\\s*image:\\s*clusterzx\\/paperless-ai:\\s*(?<currentValue>v?[0-9\\.]+)"
+      ],
+      "datasourceTemplate": "docker",
+      "depNameTemplate": "clusterzx/paperless-ai",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/paperless/paperless\\.redis\\.yaml/"
+      ],
+      "matchStrings": [
+        "kubernetesConfig:\\s*\\n\\s*image:\\s*quay\\.io\\/opstree\\/redis:(?<currentValue>v?[0-9\\.]+)"
+      ],
+      "datasourceTemplate": "docker",
+      "depNameTemplate": "quay.io/opstree/redis",
+      "versioningTemplate": "semver"
+    },
     {
       "customType": "regex",
       "managerFilePatterns": [
