@@ -65,8 +65,7 @@ metadata:
   labels:
     backupseerr: "true"
 spec:
-  # The command to create the safe backup file
-  backupCommand: sqlite3 /config/db/db.sqlite3 ".backup '/config/db/db.sqlite3.bak'"
+  backupCommand: sh -c "sqlite3 /config/db/db.sqlite3 \".backup '/config/db/db.sqlite3.bak'\""
   pod:
     spec:
       containers:
@@ -77,6 +76,8 @@ spec:
           volumeMounts:
             - name: seerr-config
               mountPath: /config
+            - name: seerr-config
+              mountPath: /data
       volumes:
         - name: seerr-config
           persistentVolumeClaim:
