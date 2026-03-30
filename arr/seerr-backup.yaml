@@ -62,7 +62,7 @@ kind: PreBackupPod
 metadata:
   name: seerr-db-freeze
   namespace: arr
-labels:
+  labels:
     backupseerr: "true"
 spec:
   # The command to create the safe backup file
