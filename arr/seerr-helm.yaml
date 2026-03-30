@@ -37,6 +37,8 @@ kind: PersistentVolumeClaim
 metadata:
   name: seerr-config-pvc
   namespace: arr
+  labels:
+    backupseerr: "true"
 spec:
   accessModes:
     - ReadWriteOnce
