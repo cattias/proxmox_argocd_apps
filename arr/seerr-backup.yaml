@@ -65,8 +65,8 @@ metadata:
   labels:
     backupseerr: "true"
 spec:
-  backupCommand: |
-    sh -c "sqlite3 /config/db/db.sqlite3 '.backup /config/db/db.sqlite3.bak'"
+  backupCommand: |-
+    sh -c "sqlite3 /data/db/db.sqlite3 '.backup /data/db/db.sqlite3.bak'"
   pod:
     spec:
       containers:
@@ -75,8 +75,6 @@ spec:
           image: nouchka/sqlite3:latest 
           command: ["/bin/sh", "-c", "sleep infinity"] # k8up will exec into this
           volumeMounts:
-            - name: seerr-config
-              mountPath: /config
             - name: seerr-config
               mountPath: /data
       volumes:
