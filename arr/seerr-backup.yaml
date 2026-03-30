@@ -65,7 +65,8 @@ metadata:
   labels:
     backupseerr: "true"
 spec:
-  backupCommand: sh -c "sqlite3 /config/db/db.sqlite3 \".backup '/config/db/db.sqlite3.bak'\""
+  backupCommand: |
+    sh -c "sqlite3 /config/db/db.sqlite3 '.backup /config/db/db.sqlite3.bak'"
   pod:
     spec:
       containers:
