@@ -57,26 +57,32 @@ spec:
             runAsUser: 1000
             runAsGroup: 1000
 ---
-apiVersion: k8up.io/v1
-kind: PreBackupPod
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: seerr-db-freeze
+  name: seerr-backup-worker
   namespace: arr
-  labels:
-    backupseerr: "true"
 spec:
-  backupCommand: |-
-    sh -c "sqlite3 /data/db/db.sqlite3 '.backup /data/db/db.sqlite3.bak'"
-  pod:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: seerr-worker
+  template:
+    metadata:
+      labels:
+        app: seerr-worker
+      annotations:
+        k8up.io/backupCommand: |-
+          sh -c "sqlite3 /config/db/db.sqlite3 '.backup /config/db/db.sqlite3.bak'"
     spec:
       containers:
-        - name: sqlite-dumper
-          image: nouchka/sqlite3:latest 
+        - name: worker
+          image: nouchka/sqlite3:latest
           command: ["/bin/sh", "-c", "sleep infinity"]
           volumeMounts:
-            - name: seerr-config
-              mountPath: /data
+            - name: seerr-data
+              mountPath: /config
       volumes:
-        - name: seerr-config
+        - name: seerr-data
           persistentVolumeClaim:
             claimName: seerr-config-pvc
