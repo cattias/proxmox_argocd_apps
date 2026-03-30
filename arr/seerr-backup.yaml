@@ -62,6 +62,8 @@ kind: PreBackupPod
 metadata:
   name: seerr-db-freeze
   namespace: arr
+labels:
+    backupseerr: "true"
 spec:
   # The command to create the safe backup file
   backupCommand: sqlite3 /config/db/db.sqlite3 ".backup '/config/db/db.sqlite3.bak'"
