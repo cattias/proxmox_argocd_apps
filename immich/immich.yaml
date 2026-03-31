@@ -21,7 +21,7 @@ spec:
   project: default
   source:
     repoURL: oci://ghcr.io/immich-app/immich-charts/immich
-    targetRevision: 0.11.0
+    targetRevision: 0.11.1
     chart: immich
     helm:
       valuesObject:
