@@ -31,15 +31,11 @@ spec:
 
         # --- Ollama Configuration ---
         - name: PAPERLESS_AI_PROVIDER
-          value: "ollama"
+          value: "custom"
         - name: PAPERLESS_AI_OLLAMA_HOST
-          value: "http://192.168.178.82:11434"
+          value: "http://192.168.178.235:1234/v1"
         - name: PAPERLESS_AI_OLLAMA_MODEL
-          value: "mistral:7b"  # Fast model for initial tagging/OCR correction
-        - name: PAPERLESS_AI_OLLAMA_CHAT_MODEL
-          value: "mistral-small:24b" # Heavy model for natural language questions
-        - name: PAPERLESS_AI_PROMPT_LANGUAGE
-          value: "French and German" # Explicitly tell the AI to expect these languages
+          value: "qwen/qwen3-30b-a3b-2507"
 
         # --- Performance & UI ---
         - name: PAPERLESS_AI_PORT
