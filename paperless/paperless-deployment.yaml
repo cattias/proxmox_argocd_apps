@@ -63,7 +63,7 @@ spec:
         - name: USER_UID
           value: "1000"
         - name: GROUP_GID
-          value: "1000"
+          value: "10"
         - name: PAPERLESS_DATA_DIR
           value: "/data"
         - name: PAPERLESS_MEDIA_ROOT
