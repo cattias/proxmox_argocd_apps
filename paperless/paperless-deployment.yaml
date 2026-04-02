@@ -100,6 +100,9 @@ spec:
         - name: media-volume
           mountPath: /consume
           subPath: documents/paperless/consume
+        - name: media-volume
+          mountPath: /tmp
+          subPath: documents/paperless/tmp
 
       volumes:
       - name: media-volume
