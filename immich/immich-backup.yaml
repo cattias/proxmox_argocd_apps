@@ -8,7 +8,7 @@ spec:
     schedule: "5 0 * * *"
     failedJobsHistoryLimit: 2
     successfulJobsHistoryLimit: 2
-    concurrentRunsAllowed: false
+    # concurrentRunsAllowed: false
     promURL: http://prometheus-pushgateway.monitoring.svc.cluster.local:9091
     labelSelectors:
       - matchExpressions:
