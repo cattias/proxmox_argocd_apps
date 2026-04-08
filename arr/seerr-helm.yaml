@@ -21,7 +21,7 @@ spec:
   project: default
   source:
     repoURL: oci://ghcr.io/seerr-team/seerr/seerr-chart
-    targetRevision: 3.4.0
+    targetRevision: 3.4.1
     chart: seerr
     helm:
       valuesObject:
