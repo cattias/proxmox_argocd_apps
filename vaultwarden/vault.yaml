@@ -27,7 +27,7 @@ spec:
       valuesObject:
         image:
           repository: vaultwarden/server
-          tag: 1.35.8
+          tag: 1.36.0
         domain: "https://vault.attias.io"
         database:
           type: postgresql
