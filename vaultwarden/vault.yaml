@@ -37,6 +37,4 @@ spec:
           existingSecret: "vault-admin-token"
           existingSecretKey: "admin-token"
         storage:
-          enabled: true
-          size: "10Gi"
-          class: "proxmox-ceph"
+          existingVolumeClaim: "vault-data-pvc"
