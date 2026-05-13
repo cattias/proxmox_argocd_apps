@@ -36,3 +36,14 @@ spec:
         adminToken:
           existingSecret: "vault-admin-token"
           existingSecretKey: "admin-token"
+        signupsAllowed: false
+        smtp:
+          existingSecret: "vault-admin-token"
+          host: "smtp-relay.brevo.com"
+          port: 587
+          from: "vault@attias.io"
+          fromName: "Kiki Vault"
+          username: 
+            existingSecretKey: "smtp-username"
+          password: 
+            existingSecretKey: "smtp-password"
