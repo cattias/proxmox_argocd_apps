@@ -36,5 +36,3 @@ spec:
         adminToken:
           existingSecret: "vault-admin-token"
           existingSecretKey: "admin-token"
-        storage:
-          existingVolumeClaim: "vault-data-pvc"
