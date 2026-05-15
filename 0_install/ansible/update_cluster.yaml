@@ -14,6 +14,17 @@
         upgrade: dist
         autoremove: yes
         autoclean: yes
+      register: apt_result
+
+    - name: "Update Pi-hole Software"
+      command: pihole -up --unattended
+      when: is_pihole | default(false) == true
+      register: pihole_update
+      changed_when: "'Everything is up to date' not in pihole_update.stdout"
+
+    - name: Summary
+      debug:
+        msg: "OS updated: {{ apt_result.changed }}. Pi-hole updated: {{ pihole_update.changed | default('N/A') }}"
 
     # - name: "Check if a reboot is required"
     #   ansible.builtin.stat:
