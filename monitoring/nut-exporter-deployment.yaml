@@ -21,7 +21,7 @@ spec:
       hostNetwork: true
       containers:
         - name: nut-exporter
-          image: ghcr.io/druggeri/nut_exporter:3.2.5
+          image: ghcr.io/druggeri/nut_exporter:3.3.0
           imagePullPolicy: IfNotPresent
           env:
             - name: NUT_EXPORTER_SERVER
