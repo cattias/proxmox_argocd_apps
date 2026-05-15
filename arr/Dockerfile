@@ -1,4 +1,4 @@
-FROM contre95/soulsolid:v0.22.2
+FROM contre95/soulsolid:v0.22.3
 
 # RUN apk add yt-dlp
 # RUN --mount=type=ssh git clone https://git.sr.ht/~canuslector/soulsolid-youtube-plugin /tmp/plugin/youtube
