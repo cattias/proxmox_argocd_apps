@@ -40,6 +40,14 @@ sudo systemctl daemon-reload
 sudo systemctl start glancesweb
 sudo systemctl enable glancesweb
 
+INOTIFY_FILE="/etc/sysctl.d/90-k8s-inotify.conf"
+cat <<EOF | sudo tee $INOTIFY_FILE > /dev/null
+fs.inotify.max_user_watches=524288
+fs.inotify.max_user_instances=512
+EOF
+
+sudo sysctl --system
+
 sudo reboot
 
 # add to k0sctl config
