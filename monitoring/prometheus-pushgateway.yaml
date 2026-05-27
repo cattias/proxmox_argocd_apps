@@ -22,7 +22,7 @@ spec:
   source:
     chart: prometheus-pushgateway
     repoURL: https://prometheus-community.github.io/helm-charts
-    targetRevision: 3.6.0
+    targetRevision: 3.6.1
     helm:
       releaseName: prometheus-pushgateway
       valuesObject:
