@@ -28,7 +28,7 @@ spec:
         image:
           registry: ghcr.io
           repository: seerr-team/seerr
-          tag: v3.2.0
+          tag: v3.3.0
         config:
           persistence:
             existingClaim: seerr-config-pvc
