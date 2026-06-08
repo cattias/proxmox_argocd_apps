@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: tooling-container
-          image: "kikiattias/toolserver:local"
+          image: "kikiattias/tooling-server:local"
           imagePullPolicy: Always
           ports:
             - containerPort: 2022
