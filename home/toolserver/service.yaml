@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: tooling-server-svc
+  namespace: home
+  labels:
+    app: tooling-server
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 2022
+      targetPort: 2022
+      protocol: TCP
+      name: ssh
+  selector:
+    app: tooling-server

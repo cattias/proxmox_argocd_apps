@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tooling-server
+  namespace: home
+  labels:
+    app: tooling-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tooling-server
+  template:
+    metadata:
+      labels:
+        app: tooling-server
+    spec:
+      containers:
+        - name: tooling-container
+          image: "kikiattias/toolserver:local"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 2022
+              name: ssh
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
