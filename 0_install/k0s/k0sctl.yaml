@@ -9,47 +9,47 @@ spec:
       ssh:
         address: 192.168.178.175
         user: kiki
-        keyPath: /Users/christopheattias/.ssh/id_ed25519
+        keyPath: /home/kiki/.ssh/id_ed25519
     - role: controller
       ssh:
         address: 192.168.178.199
         user: kiki
-        keyPath: /Users/christopheattias/.ssh/id_ed25519
+        keyPath: /home/kiki/.ssh/id_ed25519
     - role: controller
       ssh:
         address: 192.168.178.196
         user: kiki
-        keyPath: /Users/christopheattias/.ssh/id_ed25519
+        keyPath: /home/kiki/.ssh/id_ed25519
 
     # --- The Workers ---
     - role: worker
       ssh:
         address: 192.168.178.72
         user: kiki
-        keyPath: /Users/christopheattias/.ssh/id_ed25519
+        keyPath: /home/kiki/.ssh/id_ed25519
     - role: worker
       ssh:
         address: 192.168.178.223
         user: kiki
-        keyPath: /Users/christopheattias/.ssh/id_ed25519
+        keyPath: /home/kiki/.ssh/id_ed25519
     - role: worker
       ssh:
         address: 192.168.178.15
         user: kiki
-        keyPath: /Users/christopheattias/.ssh/id_ed25519
+        keyPath: /home/kiki/.ssh/id_ed25519
     - role: worker
       ssh:
         address: 192.168.178.149
         user: kiki
-        keyPath: /Users/christopheattias/.ssh/id_ed25519
+        keyPath: /home/kiki/.ssh/id_ed25519
     - role: worker
       ssh:
         address: 192.168.178.204
         user: kiki
-        keyPath: /Users/christopheattias/.ssh/id_ed25519
+        keyPath: /home/kiki/.ssh/id_ed25519
 
   k0s:
-    version: v1.35.4+k0s.0
+    version: v1.36.1+k0s.0
     config:
       spec:
         network:
