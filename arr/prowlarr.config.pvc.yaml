@@ -9,4 +9,4 @@ spec:
   storageClassName: proxmox-ceph
   resources:
     requests:
-      storage: 10Gi
+      storage: 1Gi
