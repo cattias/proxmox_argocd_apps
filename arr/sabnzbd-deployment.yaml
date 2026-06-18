@@ -29,7 +29,7 @@ spec:
             - name: TZ
               value: Etc/UTC
           name: sabnzbd
-          image: ghcr.io/linuxserver/sabnzbd:5.0.4-ls258
+          image: ghcr.io/linuxserver/sabnzbd:5.0.4-ls259
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
