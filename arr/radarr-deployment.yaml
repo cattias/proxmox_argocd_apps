@@ -29,7 +29,7 @@ spec:
             - name: TZ
               value: UTC
           name: radarr
-          image: ghcr.io/linuxserver/radarr:6.2.1.10461-ls306
+          image: ghcr.io/linuxserver/radarr:6.2.1.10461-ls307
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 7878
