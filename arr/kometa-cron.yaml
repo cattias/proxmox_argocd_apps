@@ -17,7 +17,7 @@ spec:
             runAsGroup: 0
           containers:
             - name: kometa
-              image: kometateam/kometa:v2.4.2
+              image: kometateam/kometa:v2.4.3
               imagePullPolicy: IfNotPresent
               args: [ "--run", "--read-only-config" ]
               volumeMounts:
