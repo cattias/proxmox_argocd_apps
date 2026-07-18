@@ -127,8 +127,10 @@ spec:
         persistence:
           enabled: true
           existingClaim: traefik-data-pvc
+        accessLog:
+          enabled: false
+          format: json
+          filePath: "/data/access.log"
         logs:
-          access:
-            enabled: false
-            format: "json"
-            filePath: "/data/access.log"
+          general:
+            level: INFO
