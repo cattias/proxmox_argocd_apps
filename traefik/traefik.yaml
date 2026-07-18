@@ -131,6 +131,3 @@ spec:
           enabled: false
           format: json
           filePath: "/data/access.log"
-        logs:
-          general:
-            level: INFO
