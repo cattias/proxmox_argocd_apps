@@ -32,9 +32,8 @@ spec:
                   repository: ghcr.io/immich-app/immich-server
                   tag: v3.0.3
                 env:
-                  - name: REDIS_HOSTNAME
-                    value: immich-redis
-                  - name: DB_URL
+                  REDIS_HOSTNAME: immich-redis
+                  DB_URL:
                     valueFrom:
                       secretKeyRef:
                         name: immich-db-app
@@ -52,18 +51,17 @@ spec:
             storageTemplate:
               enabled: true
               template: '{{ "{{" }}y{{ "}}" }}/{{ "{{" }}y{{ "}}" }}-{{ "{{" }}MM{{ "}}" }}-{{ "{{" }}dd{{ "}}" }}/{{ "{{" }}filename{{ "}}" }}'
-        persistence:
-          cache:
-            enabled: true
-            size: 10Gi
-            type: emptyDir
-            accessMode: ReadWriteMany
-            storageClass: proxmox-ceph
         server:
           enabled: true
           service:
             main:
               type: LoadBalancer
-              targetPort: 2283
         machine-learning:
           enabled: true
+          persistence:
+            cache:
+              enabled: true
+              size: 10Gi
+              type: persistentVolumeClaim
+              accessMode: ReadWriteMany
+              storageClass: proxmox-ceph
