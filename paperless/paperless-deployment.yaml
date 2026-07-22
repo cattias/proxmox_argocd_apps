@@ -58,6 +58,12 @@ spec:
 
         - name: PAPERLESS_URL
           value: https://paperless.attias.io
+
+	- name: PAPERLESS_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: paperless-openid-secret
+              key: secretkey
         
         # Essential Paperless Settings & combined data/media volume
         - name: USER_UID
