@@ -59,7 +59,7 @@ spec:
         - name: PAPERLESS_URL
           value: https://paperless.attias.io
 
-	- name: PAPERLESS_SECRET_KEY
+        - name: PAPERLESS_SECRET_KEY
           valueFrom:
             secretKeyRef:
               name: paperless-openid-secret
