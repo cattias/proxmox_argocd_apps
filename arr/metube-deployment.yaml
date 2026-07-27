@@ -30,8 +30,12 @@ spec:
               value: UTC
             - name: UMASK
               value: "022"
+            - name: YTDL_OPTIONS
+              value: '{"extractor_args":{"youtube":{"player_client":["android","web"]}}}'
+            - name: YTDL_AUTO_UPDATE
+              value: "true"
           name: metube
-          image: alexta69/metube:2025.12.30
+          image: alexta69/metube:2026.07.24
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8081
