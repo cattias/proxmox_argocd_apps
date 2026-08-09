@@ -1,0 +1,12 @@
+name: attias/plex-whitelist
+description: "Whitelist legitimate Plex client/API traffic on kikiflix.eu"
+whitelist:
+  reason: "Plex client or Plex API traffic"
+  expression:
+    - JsonExtract(evt.Line.Raw, "request.host") == "kikiflix.eu" && JsonExtract(evt.Line.Raw, "request.headers.X-Plex-Token[0]") != ""
+    - JsonExtract(evt.Line.Raw, "request.host") == "kikiflix.eu" && JsonExtract(evt.Line.Raw, "request.headers.X-Plex-Client-Identifier[0]") != ""
+    - JsonExtract(evt.Line.Raw, "request.host") == "kikiflix.eu" && JsonExtract(evt.Line.Raw, "request.uri") startsWith "/library"
+    - JsonExtract(evt.Line.Raw, "request.host") == "kikiflix.eu" && JsonExtract(evt.Line.Raw, "request.uri") == "/identity"
+    - JsonExtract(evt.Line.Raw, "request.host") == "kikiflix.eu" && JsonExtract(evt.Line.Raw, "request.uri") startsWith "/status/sessions"
+    - JsonExtract(evt.Line.Raw, "request.host") == "kikiflix.eu" && JsonExtract(evt.Line.Raw, "request.uri") startsWith "/video/:/transcode"
+    - JsonExtract(evt.Line.Raw, "request.host") == "kikiflix.eu" && JsonExtract(evt.Line.Raw, "request.uri") startsWith "/photo/:/transcode"
