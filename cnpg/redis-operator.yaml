@@ -22,17 +22,3 @@ spec:
     repoURL: https://ot-container-kit.github.io/helm-charts/
     targetRevision: 0.25.x
     chart: redis-operator
-    helm:
-      valuesObject:
-        config:
-          clusterWide: true
-        redisOperator:
-          # Workaround for a bug in redis-operator v0.26.0: the manager's
-          # built-in default --feature-gates value includes an
-          # "AvoidCommandLinePassword" gate that isn't actually registered
-          # in the binary, so it crash-loops with
-          # "unrecognized feature gate: AvoidCommandLinePassword" unless we
-          # explicitly override it here. Remove this once upstream ships a
-          # fixed release (none as of 2026-08-19).
-          extraArgs:
-            - "--feature-gates=GenerateConfigInInitContainer=false"
