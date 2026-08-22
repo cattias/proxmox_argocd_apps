@@ -20,5 +20,5 @@ spec:
   project: default
   source:
     repoURL: https://ot-container-kit.github.io/helm-charts/
-    targetRevision: 0.25.x
+    targetRevision: 0.26.x
     chart: redis-operator
