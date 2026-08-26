@@ -29,7 +29,7 @@ spec:
             - name: TZ
               value: UTC
           name: prowlarr
-          image: ghcr.io/linuxserver/prowlarr:2.5.2.5491-ls156
+          image: ghcr.io/linuxserver/prowlarr:2.5.2.5491-ls157
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 9696
