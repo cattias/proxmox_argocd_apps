@@ -124,6 +124,9 @@ spec:
               dnsChallenge:
                 provider: cloudflare
                 delayBeforeCheck: 0
+                resolvers:
+                  - "1.1.1.1:53"
+                  - "8.8.8.8:53"
         persistence:
           enabled: true
           existingClaim: traefik-data-pvc
