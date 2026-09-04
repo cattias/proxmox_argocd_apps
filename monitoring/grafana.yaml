@@ -55,6 +55,8 @@ spec:
             signout_redirect_url: https://authentik.attias.io/application/o/grafana/end-session/
             allow_sign_up: true
             auto_assign_org_role: Editor
+            role_attribute_path: contains(groups[*], 'grafana-admins') && 'Admin' || 'Editor'
+            role_attribute_strict: false
         extraSecretMounts:
           - name: auth-generic-oauth-secret
             secretName: grafana-oidc
