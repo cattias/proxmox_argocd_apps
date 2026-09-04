@@ -1,0 +1,92 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: alloy
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  destination:
+    namespace: monitoring
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: alloy
+    repoURL: https://grafana.github.io/helm-charts
+    targetRevision: 0.11.0
+    helm:
+      releaseName: alloy
+      valuesObject:
+        alloy:
+          configMap:
+            create: true
+            content: |-
+              // Discover every pod in the cluster, tag it, and pull its logs via the
+              // kubelet API (no hostPath mounts needed) into Loki.
+              discovery.kubernetes "pods" {
+                role = "pod"
+              }
+
+              discovery.relabel "pod_logs" {
+                targets = discovery.kubernetes.pods.targets
+
+                rule {
+                  source_labels = ["__meta_kubernetes_namespace"]
+                  target_label  = "namespace"
+                }
+                rule {
+                  source_labels = ["__meta_kubernetes_pod_name"]
+                  target_label  = "pod"
+                }
+                rule {
+                  source_labels = ["__meta_kubernetes_pod_container_name"]
+                  target_label  = "container"
+                }
+                rule {
+                  source_labels = ["__meta_kubernetes_pod_node_name"]
+                  target_label  = "node"
+                }
+                rule {
+                  source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+                  target_label  = "app"
+                }
+              }
+
+              loki.source.kubernetes "pods" {
+                targets    = discovery.relabel.pod_logs.output
+                forward_to = [loki.process.pods.receiver]
+              }
+
+              loki.process "pods" {
+                forward_to = [loki.write.default.receiver]
+
+                stage.static_labels {
+                  values = {
+                    cluster = "kiki-k0s",
+                  }
+                }
+              }
+
+              loki.write "default" {
+                endpoint {
+                  url = "http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push"
+                }
+              }
+          clustering:
+            enabled: false
+          mounts:
+            varlog: false
+        controller:
+          type: daemonset
+        serviceMonitor:
+          enabled: true
+          labels:
+            release: kube-prometheus-stack

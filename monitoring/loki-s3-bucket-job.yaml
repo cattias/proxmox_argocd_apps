@@ -1,0 +1,38 @@
+# One-shot, idempotent bucket creation on the existing Ceph RGW
+# (http://192.168.178.69:7480, same gateway used by the barman-secret
+# ObjectStores) so Loki has somewhere to write chunks/index.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: loki-s3-bucket-init
+  namespace: monitoring
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        app: loki-s3-bucket-init
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: mc
+          image: minio/mc:latest
+          env:
+            - name: ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: loki-s3-secret
+                  key: ACCESS_KEY_ID
+            - name: ACCESS_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: loki-s3-secret
+                  key: ACCESS_SECRET_KEY
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              mc alias set rgw http://192.168.178.69:7480 "$ACCESS_KEY_ID" "$ACCESS_SECRET_KEY"
+              mc mb --ignore-existing rgw/loki-logs

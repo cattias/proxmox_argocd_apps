@@ -1,0 +1,64 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: grafana
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  destination:
+    namespace: monitoring
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: grafana
+    repoURL: https://grafana.github.io/helm-charts
+    targetRevision: 8.6.4
+    helm:
+      releaseName: grafana
+      valuesObject:
+        admin:
+          existingSecret: grafana-admin
+          userKey: admin-user
+          passwordKey: admin-password
+        persistence:
+          enabled: true
+          type: pvc
+          storageClassName: proxmox-ceph
+          size: 5Gi
+        grafana.ini:
+          server:
+            root_url: https://grafana.attias.io
+          analytics:
+            reporting_enabled: false
+            check_for_updates: false
+        datasources:
+          datasources.yaml:
+            apiVersion: 1
+            datasources:
+              - name: Prometheus
+                type: prometheus
+                uid: kube-prometheus-stack
+                url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+                access: proxy
+                isDefault: false
+              - name: Loki
+                type: loki
+                uid: loki
+                url: http://loki.monitoring.svc.cluster.local:3100
+                access: proxy
+                isDefault: true
+                jsonData:
+                  maxLines: 1000
+        serviceMonitor:
+          enabled: true
+          labels:
+            release: kube-prometheus-stack

@@ -71,6 +71,12 @@ spec:
             serviceMonitor:
               # -- enable a prometheus ServiceMonitor
               enabled: true
+          env:
+            - name: ARGO_WORKFLOWS_OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-oidc-argo-workflows
+                  key: client-secret
           volumes:
             - name: postgres-creds
               secret:
@@ -78,12 +84,19 @@ spec:
             - name: authentik-secret
               secret:
                 secretName: authentik-secret
+            - name: blueprint-argo-workflows
+              configMap:
+                name: authentik-blueprint-argo-workflows
           volumeMounts:
             - name: postgres-creds
               mountPath: /postgres-creds
               readOnly: true
             - name: authentik-secret
               mountPath: /authentik-secret
+              readOnly: true
+            - name: blueprint-argo-workflows
+              mountPath: /blueprints/custom/argo-workflows.yaml
+              subPath: argo-workflows.yaml
               readOnly: true
 
         worker:
@@ -93,6 +106,12 @@ spec:
             serviceMonitor:
               # -- enable a prometheus ServiceMonitor
               enabled: true
+          env:
+            - name: ARGO_WORKFLOWS_OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-oidc-argo-workflows
+                  key: client-secret
           volumes:
             - name: postgres-creds
               secret:
@@ -100,12 +119,19 @@ spec:
             - name: authentik-secret
               secret:
                 secretName: authentik-secret
+            - name: blueprint-argo-workflows
+              configMap:
+                name: authentik-blueprint-argo-workflows
           volumeMounts:
             - name: postgres-creds
               mountPath: /postgres-creds
               readOnly: true
             - name: authentik-secret
               mountPath: /authentik-secret
+              readOnly: true
+            - name: blueprint-argo-workflows
+              mountPath: /blueprints/custom/argo-workflows.yaml
+              subPath: argo-workflows.yaml
               readOnly: true
 
         prometheus:

@@ -1,0 +1,61 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argo-workflows
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  destination:
+    namespace: argo-workflows
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: argo-workflows
+    repoURL: https://argoproj.github.io/argo-helm
+    targetRevision: 0.42.3
+    helm:
+      releaseName: argo-workflows
+      valuesObject:
+        controller:
+          serviceMonitor:
+            enabled: true
+            additionalLabels:
+              release: kube-prometheus-stack
+          persistence: {}
+        server:
+          extraArgs:
+            - --auth-mode=sso
+          sso:
+            enabled: true
+            issuer: https://authentik.attias.io/application/o/argo-workflows/
+            clientId:
+              name: argo-workflows-sso
+              key: client-id
+            clientSecret:
+              name: argo-workflows-sso
+              key: client-secret
+            redirectUrl: https://argo-workflows.attias.io/oauth2/callback
+            scopes:
+              - openid
+              - profile
+              - email
+            rbac:
+              enabled: false
+          serviceMonitor:
+            enabled: true
+            additionalLabels:
+              release: kube-prometheus-stack
+        workflow:
+          serviceAccount:
+            create: true
+          rbac:
+            create: true
