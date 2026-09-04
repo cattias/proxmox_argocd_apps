@@ -6,9 +6,6 @@ rules:
 - apiGroups: [""] # Refers to core API resources (Nodes)
   resources: ["nodes"]
   verbs: ["get", "list"]
-- apiGroups: ["apps"] # Refers to apps API resources (Deployments)
-  resources: ["deployments"]
-  verbs: ["get", "list"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

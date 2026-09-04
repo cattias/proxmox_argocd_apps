@@ -222,29 +222,12 @@ spec:
                 else
                     K0S_STATUS_CODE=0
                 fi
-                
-                # --- ArgoCD Version Check ---
-                # Fetches the latest stable ArgoCD version tag
-                ARGOCD_LATEST=$(curl -fsSL https://api.github.com/repos/argoproj/argo-cd/releases/latest | grep '"tag_name":' | sed -E 's/.*"tag_name":\s*"v?([^"]+)".*/\1/' | head -1)
-                
-                # Fetches the currently installed ArgoCD version from its Kubernetes Deployment
-                ARGOCD_CURRENT=$(/opt/kubectl get deploy argocd-server -n argocd -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null | cut -d ':' -f2 | tr -d 'v')
-                
-                if [[ "$(echo -e "$ARGOCD_CURRENT\n$ARGOCD_LATEST" | sort -V | tail -n 1)" == "$ARGOCD_LATEST" && "$ARGOCD_LATEST" != "$ARGOCD_CURRENT" ]]; then
-                    ARGOCD_STATUS_CODE=1
-                else
-                    ARGOCD_STATUS_CODE=0
-                fi
 
                 # --- Output Metrics ---
                 echo "# Custom Metrics for Version Checks" > $OUTPUT_FILE
                 echo "# HELP k0s_upgrade_available Status code for k0s version comparison." >> $OUTPUT_FILE
                 echo "# TYPE k0s_upgrade_available gauge" >> $OUTPUT_FILE
                 echo "k0s_upgrade_available{current_version=\"$K0S_CURRENT\", latest_version=\"$K0S_LATEST\"} $K0S_STATUS_CODE" >> $OUTPUT_FILE
-                
-                echo "# HELP argocd_upgrade_available Status code for ArgoCD version comparison." >> $OUTPUT_FILE
-                echo "# TYPE argocd_upgrade_available gauge" >> $OUTPUT_FILE
-                echo "argocd_upgrade_available{current_version=\"$ARGOCD_CURRENT\", latest_version=\"$ARGOCD_LATEST\"} $ARGOCD_STATUS_CODE" >> $OUTPUT_FILE
                 EOF
 
                 chmod +x /opt/version-check.sh

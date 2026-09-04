@@ -1,0 +1,85 @@
+# ArgoCD managing itself. Pinned to chart 10.7.2 / appVersion v3.5.2 -
+# exactly the version already running from the old imperative install, so
+# this first sync is a pure ownership handover, not a version change.
+# Renovate takes over version bumps from here (same as every other app).
+#
+# configs.cm / configs.rbac / configs.params below are the exact content
+# that used to live as plain manifests (argocd-cm, argocd-rbac-cm from
+# proxmox_argocd_apps_secret/secrets/secret-argocd.yaml, and
+# argocd-cmd-params-cm from home/homepage/argocd-cmd-params-cm.yaml) - both
+# retired as part of this change so there's a single owner for each object.
+#
+# argocd-secret (Dex client secret) and the argocd-server-tls Certificate
+# are deliberately NOT managed here - configs.secret.createSecret: false
+# leaves the existing plain-file-managed argocd-secret
+# (proxmox_argocd_apps_secret/secrets/secret-argocd.yaml) untouched, and
+# the Traefik IngressRoute (home/homepage/argocd-ingressroute.yaml) is
+# also unchanged.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      # Existing Deployments/Services etc. were created by the old
+      # `kubectl apply --server-side` install script under a different
+      # field manager; Replace avoids the same class of merge-conflict
+      # we hit migrating argo-workflows to a new chart major version.
+      - Replace=true
+  destination:
+    namespace: argocd
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    chart: argo-cd
+    repoURL: https://argoproj.github.io/argo-helm
+    targetRevision: 10.7.2
+    helm:
+      releaseName: argocd
+      valuesObject:
+        dex:
+          enabled: true
+        server:
+          ingress:
+            enabled: false
+        configs:
+          secret:
+            createSecret: false
+          cm:
+            "accounts.homepage": apiKey
+            "accounts.homepage.enabled": "true"
+            "accounts.admin.enabled": "false"
+            url: https://argocd.attias.io
+            "dex.config": |
+              connectors:
+              - type: oidc
+                id: authentik
+                name: authentik
+                config:
+                  issuer: https://authentik.attias.io/application/o/argocd/
+                  clientID: FNldQDB4CcwdJxq5jfCEnV4T5LTyQad3m4yFkDkU
+                  clientSecret: $dex.authentik.clientSecret
+                  insecureEnableGroups: true
+                  insecureSkipVerify: true
+                  scopes:
+                    - openid
+                    - profile
+                    - email
+                    - groups
+          rbac:
+            "policy.csv": |
+              g, homepage, role:readonly
+              g, argocd-admins, role:admin
+              g, argocd-viewers, role:readonly
+          params:
+            "server.insecure": "true"

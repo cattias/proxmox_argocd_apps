@@ -23,17 +23,6 @@ spec:
         description: >
           A newer stable version of k0s is available. Current: {{ $labels.current_version }}, Latest: {{ $labels.latest_version }}.
           Action required: Check release notes and schedule an upgrade.
-
-    # 2. ARGOCD UPGRADE ALERT
-    - alert: ArgoCDUpgradeAvailable
-      # Fires when the sidecar script sets the metric value to 1 (True)
-      expr: argocd_upgrade_available == 1
-      for: 5m
-      labels:
-        severity: warning
-        tier: application
-      annotations:
-        summary: "ArgoCD Upgrade Available ({{ $labels.current_version }} -> {{ $labels.latest_version }})"
-        description: >
-          A newer stable version of ArgoCD is available. Current: {{ $labels.current_version }}, Latest: {{ $labels.latest_version }}.
-          Action required: Update Helm values for ArgoCD deployment.
+    # ArgoCD version check retired - ArgoCD now manages its own upgrades via
+    # the self-managed argo-cd chart Application (argocd/argocd.yaml),
+    # tracked by Renovate like every other app.
