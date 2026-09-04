@@ -41,8 +41,8 @@ spec:
             reporting_enabled: false
             check_for_updates: false
           auth:
-            disable_login_form: false
-            oauth_auto_login: false
+            disable_login_form: true
+            oauth_auto_login: true
           auth.generic_oauth:
             enabled: true
             name: Authentik
