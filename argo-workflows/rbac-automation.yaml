@@ -43,3 +43,50 @@ kind: ServiceAccount
 metadata:
   name: ansible-runner
   namespace: argo-workflows
+---
+# Minimum RBAC for the Argo Workflows executor itself to function
+# (writing workflowtaskresults) - required for EVERY ServiceAccount used
+# as a Workflow's serviceAccountName, regardless of what the workflow's
+# own script needs. Missed on the first pass; ansible-daily-update's first
+# real run failed on this. One shared Role, bound to both ServiceAccounts.
+# https://argo-workflows.readthedocs.io/en/latest/workflow-rbac/
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: workflow-executor
+  namespace: argo-workflows
+rules:
+  - apiGroups: ["argoproj.io"]
+    resources: ["workflowtaskresults"]
+    verbs: ["create", "patch"]
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "patch", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ansible-runner-workflow-executor
+  namespace: argo-workflows
+subjects:
+  - kind: ServiceAccount
+    name: ansible-runner
+    namespace: argo-workflows
+roleRef:
+  kind: Role
+  name: workflow-executor
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: k0s-autopilot-runner-workflow-executor
+  namespace: argo-workflows
+subjects:
+  - kind: ServiceAccount
+    name: k0s-autopilot-runner
+    namespace: argo-workflows
+roleRef:
+  kind: Role
+  name: workflow-executor
+  apiGroup: rbac.authorization.k8s.io
