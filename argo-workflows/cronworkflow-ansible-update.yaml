@@ -1,0 +1,55 @@
+# Daily OS package update (apt upgrade + Pi-hole update) across every node
+# in the homelab - Proxmox hosts, k0s masters/workers, LXCs, and the two
+# Pi-holes - by running the existing 0_install/ansible/update_cluster.yaml
+# playbook against the existing inventory.ini, cloned fresh from git on
+# every run so this always uses whatever's currently committed.
+#
+# The playbook's own reboot-after-update step is commented out (as it was
+# before this automation existed) - packages get upgraded but nodes are
+# NOT rebooted automatically here. k0s masters/workers get their reboot
+# handled separately and deliberately by the weekly rolling-restart
+# CronWorkflow; Proxmox hosts/LXCs/Pi-holes are never auto-rebooted by
+# either job, matching what update_cluster.yaml already did before this.
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: ansible-daily-update
+  namespace: argo-workflows
+spec:
+  schedule: "30 4 * * *"
+  timezone: "Europe/Berlin"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 1800
+  workflowSpec:
+    serviceAccountName: ansible-runner
+    entrypoint: main
+    templates:
+      - name: main
+        script:
+          image: python:3.12-slim
+          command: [bash]
+          source: |
+            set -euo pipefail
+            apt-get update -qq
+            apt-get install -y -qq git openssh-client >/dev/null
+            pip install --quiet ansible-core paramiko
+            ansible-galaxy collection install community.proxmox
+
+            git clone --depth 1 https://github.com/cattias/proxmox_argocd_apps.git /tmp/repo
+            cd /tmp/repo/0_install/ansible
+
+            mkdir -p ~/.ssh
+            cp /etc/ansible-ssh/id_ed25519 ~/.ssh/id_ed25519
+            chmod 600 ~/.ssh/id_ed25519
+            export ANSIBLE_HOST_KEY_CHECKING=False
+
+            ansible-playbook -i inventory.ini update_cluster.yaml
+          volumeMounts:
+            - name: ansible-ssh-key
+              mountPath: /etc/ansible-ssh
+              readOnly: true
+    volumes:
+      - name: ansible-ssh-key
+        secret:
+          secretName: ansible-ssh-key
+          defaultMode: 0400
