@@ -15,13 +15,20 @@
 # (proxmox_argocd_apps_secret/secrets/secret-argocd.yaml) untouched, and
 # the Traefik IngressRoute (home/homepage/argocd-ingressroute.yaml) is
 # also unchanged.
+# NOTE: deliberately NO resources-finalizer.argocd.argoproj.io on this
+# Application. With it, deleting this Application object (e.g. the
+# "delete it and let it resync from scratch" move that's fine for every
+# other app) cascade-deletes every resource it last applied - which for
+# THIS app means argocd-cm and argocd-rbac-cm, i.e. it takes down the
+# whole ArgoCD control plane. Without the finalizer, deleting this
+# Application just stops ArgoCD tracking its own config; the live
+# argocd-cm/argocd-rbac-cm are untouched and a fresh `argocd app create`
+# / re-apply just re-adopts them.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: argocd
   namespace: argocd
-  finalizers:
-  - resources-finalizer.argocd.argoproj.io
 spec:
   syncPolicy:
     automated:
