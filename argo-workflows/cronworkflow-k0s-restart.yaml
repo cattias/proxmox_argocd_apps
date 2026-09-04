@@ -1,0 +1,47 @@
+# Weekly rolling restart of k0s masters/workers - runs
+# 0_install/ansible/rolling_k0s_restart.yaml, which only actually reboots a
+# node if /var/run/reboot-required exists (left behind by a prior apt
+# upgrade), one node at a time (serial: 1 in the playbook) so the cluster
+# stays up throughout.
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: ansible-weekly-k0s-restart
+  namespace: argo-workflows
+spec:
+  schedule: "0 5 * * 0"
+  timezone: "Europe/Berlin"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 1800
+  workflowSpec:
+    serviceAccountName: ansible-runner
+    entrypoint: main
+    templates:
+      - name: main
+        script:
+          image: python:3.12-slim
+          command: [bash]
+          source: |
+            set -euo pipefail
+            apt-get update -qq
+            apt-get install -y -qq git openssh-client >/dev/null
+            pip install --quiet ansible-core paramiko
+
+            git clone --depth 1 https://github.com/cattias/proxmox_argocd_apps.git /tmp/repo
+            cd /tmp/repo/0_install/ansible
+
+            mkdir -p ~/.ssh
+            cp /etc/ansible-ssh/id_ed25519 ~/.ssh/id_ed25519
+            chmod 600 ~/.ssh/id_ed25519
+            export ANSIBLE_HOST_KEY_CHECKING=False
+
+            ansible-playbook -i inventory.ini rolling_k0s_restart.yaml
+          volumeMounts:
+            - name: ansible-ssh-key
+              mountPath: /etc/ansible-ssh
+              readOnly: true
+    volumes:
+      - name: ansible-ssh-key
+        secret:
+          secretName: ansible-ssh-key
+          defaultMode: 0400

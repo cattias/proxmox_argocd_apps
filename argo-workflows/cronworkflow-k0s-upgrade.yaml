@@ -1,0 +1,102 @@
+# Checks the k0s version pinned in 0_install/k0s/k0sctl.yaml (bumped by
+# Renovate whenever a new k0s release comes out) against what's actually
+# running, and if they differ, drives a k0s Autopilot upgrade.
+#
+# Autopilot Plans are immutable (docs.k0sproject.io/head/autopilot/) - once
+# applied, only .status is ever recognized, so every run deletes any
+# existing "autopilot" Plan before creating a fresh one; that's a no-op
+# on any run where nothing actually changed.
+#
+# Controller nodes don't show up via `kubectl get nodes` (k0s doesn't
+# register controller-only nodes as k8s Nodes) - Autopilot tracks them via
+# the separate ControlNode CRD instead, so both node lists are discovered
+# live at run time rather than hardcoded here.
+#
+# NOTE: version comparison only looks at the vX.Y.Z prefix, not the
+# trailing +k0s.N build number - so a k0s-only patch (e.g. +k0s.0 -> +k0s.1
+# with no Kubernetes version change) won't be picked up. Fine for now since
+# those are rare/minor; worth revisiting if it ever matters to you.
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: k0s-autopilot-upgrade
+  namespace: argo-workflows
+spec:
+  schedule: "17 3 * * *"
+  timezone: "Europe/Berlin"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 600
+  workflowSpec:
+    serviceAccountName: k0s-autopilot-runner
+    entrypoint: main
+    templates:
+      - name: main
+        script:
+          image: alpine/k8s:1.36.4
+          command: [bash]
+          source: |
+            set -euo pipefail
+
+            DESIRED_RAW=$(curl -fsSL https://raw.githubusercontent.com/cattias/proxmox_argocd_apps/main/0_install/k0s/k0sctl.yaml | grep -oP 'version:\s*\K\S+')
+            DESIRED_BASE=$(echo "$DESIRED_RAW" | grep -oP '^v[0-9]+\.[0-9]+\.[0-9]+')
+            LIVE_RAW=$(kubectl get nodes -o jsonpath='{.items[0].status.nodeInfo.kubeletVersion}')
+
+            echo "live=$LIVE_RAW desired=$DESIRED_RAW"
+
+            if [[ "$LIVE_RAW" == "$DESIRED_BASE"* ]]; then
+              echo "Already up to date, nothing to do."
+              exit 0
+            fi
+
+            CONTROLLERS=$(kubectl get controlnodes -o jsonpath='{range .items[*]}"{.metadata.name}",{end}' | sed 's/,$//')
+            WORKERS=$(kubectl get nodes -o jsonpath='{range .items[*]}"{.metadata.name}",{end}' | sed 's/,$//')
+
+            if [[ -z "$CONTROLLERS" || -z "$WORKERS" ]]; then
+              echo "Refusing to proceed: empty controller or worker node list (controllers=[$CONTROLLERS] workers=[$WORKERS])"
+              exit 1
+            fi
+
+            echo "controllers=[$CONTROLLERS] workers=[$WORKERS]"
+
+            echo "Deleting any existing Plan (Plans are immutable - a fresh upgrade always needs a new one)..."
+            kubectl delete plan autopilot --ignore-not-found=true
+
+            cat <<PLANEOF | kubectl apply -f -
+            apiVersion: autopilot.k0sproject.io/v1beta2
+            kind: Plan
+            metadata:
+              name: autopilot
+            spec:
+              id: upgrade-$(date +%s)
+              timestamp: now
+              commands:
+                - k0supdate:
+                    version: $DESIRED_RAW
+                    platforms:
+                      linux-amd64:
+                        url: https://github.com/k0sproject/k0s/releases/download/$DESIRED_RAW/k0s-$DESIRED_RAW-amd64
+                    targets:
+                      controllers:
+                        discovery:
+                          static:
+                            nodes: [$CONTROLLERS]
+                      workers:
+                        discovery:
+                          static:
+                            nodes: [$WORKERS]
+            PLANEOF
+
+            echo "Plan created, watching progress..."
+            for i in $(seq 1 90); do
+              STATE=$(kubectl get plan autopilot -o jsonpath='{.status.state}' 2>/dev/null || echo "")
+              echo "  [$i/90] state=$STATE"
+              if [[ "$STATE" == "Completed" ]]; then
+                echo "Upgrade completed."
+                exit 0
+              fi
+              sleep 20
+            done
+
+            echo "Did not observe Completed within the wait window - check plan status manually:"
+            kubectl get plan autopilot -o yaml
+            exit 1

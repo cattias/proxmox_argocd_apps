@@ -70,6 +70,15 @@ spec:
             "accounts.homepage": apiKey
             "accounts.homepage.enabled": "true"
             "accounts.admin.enabled": "false"
+            # Legacy pre-multi-account key. Not something this chart's
+            # values set by default - it was still sitting in the live
+            # argocd-cm from the old imperative install (last touched
+            # 2026-03-08, well before this migration) and neither
+            # ServerSideApply nor the earlier Replace ever cleaned it up,
+            # since apply/replace only own fields they declare. Declaring
+            # it explicitly here removes the ambiguity of two admin-enable
+            # keys disagreeing with each other.
+            "admin.enabled": "false"
             url: https://argocd.attias.io
             "dex.config": |
               connectors:

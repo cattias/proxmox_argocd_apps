@@ -1,0 +1,45 @@
+# ServiceAccounts + RBAC for the scheduled automation CronWorkflows in this
+# folder (k0s upgrade via Autopilot, ansible-driven VM/LXC updates, k0s
+# rolling restart). Split into two ServiceAccounts on purpose: the k0s
+# upgrade workflow needs real Kubernetes API access (Plan/ControlNode/Node),
+# the ansible-driven ones only ever SSH out to the LAN and touch nothing in
+# the k8s API, so they get no extra RBAC at all.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k0s-autopilot-runner
+  namespace: argo-workflows
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k0s-autopilot-runner
+rules:
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list"]
+  - apiGroups: ["autopilot.k0sproject.io"]
+    resources: ["controlnodes"]
+    verbs: ["get", "list"]
+  - apiGroups: ["autopilot.k0sproject.io"]
+    resources: ["plans"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k0s-autopilot-runner
+subjects:
+  - kind: ServiceAccount
+    name: k0s-autopilot-runner
+    namespace: argo-workflows
+roleRef:
+  kind: ClusterRole
+  name: k0s-autopilot-runner
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ansible-runner
+  namespace: argo-workflows

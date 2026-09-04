@@ -297,6 +297,19 @@
       "datasourceTemplate": "docker",
       "depNameTemplate": "ghcr.io/linuxserver/bazarr",
       "versioningTemplate": "regex:^v?(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?:\\.(?<revision>\\d+))?-ls(?<build>\\d+)$"
+    },
+    {
+      "description": "Track the k0s version pinned in 0_install/k0s/k0sctl.yaml - applied by the k0s-autopilot-upgrade CronWorkflow, not by ArgoCD directly",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/0_install/k0s/k0sctl\\.yaml$/"
+      ],
+      "matchStrings": [
+        "version:\\s*(?<currentValue>v[0-9]+\\.[0-9]+\\.[0-9]+\\+k0s\\.[0-9]+)"
+      ],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "k0sproject/k0s",
+      "versioningTemplate": "regex:^v(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)\\+k0s\\.(?<build>\\d+)$"
     }
   ],
   "argocd": {
@@ -313,9 +326,19 @@
   "packageRules": [
     {
       "description": "Automerge non-major updates",
-      "matchUpdateTypes": ["minor", "patch"],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
       "automerge": true,
       "ignoreTests": true
+    },
+    {
+      "description": "Never automerge k0s version bumps - this is the Kubernetes control plane, review it by hand before the k0s-autopilot-upgrade CronWorkflow picks it up",
+      "matchDepNames": [
+        "k0sproject/k0s"
+      ],
+      "automerge": false
     }
   ]
 }
