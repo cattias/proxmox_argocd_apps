@@ -16,7 +16,8 @@ metadata:
   name: ansible-daily-update
   namespace: argo-workflows
 spec:
-  schedule: "30 4 * * *"
+  schedules:
+    - "30 4 * * *"
   timezone: "Europe/Berlin"
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 1800

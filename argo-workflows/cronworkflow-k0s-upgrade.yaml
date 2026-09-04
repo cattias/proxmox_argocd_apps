@@ -22,7 +22,8 @@ metadata:
   name: k0s-autopilot-upgrade
   namespace: argo-workflows
 spec:
-  schedule: "17 3 * * *"
+  schedules:
+    - "17 3 * * *"
   timezone: "Europe/Berlin"
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 600

@@ -9,7 +9,8 @@ metadata:
   name: ansible-weekly-k0s-restart
   namespace: argo-workflows
 spec:
-  schedule: "0 5 * * 0"
+  schedules:
+    - "0 5 * * 0"
   timezone: "Europe/Berlin"
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 1800
