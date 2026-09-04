@@ -77,6 +77,11 @@ spec:
                 secretKeyRef:
                   name: authentik-oidc-argo-workflows
                   key: client-secret
+            - name: GRAFANA_OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-oidc-grafana
+                  key: client-secret
           volumes:
             - name: postgres-creds
               secret:
@@ -87,6 +92,9 @@ spec:
             - name: blueprint-argo-workflows
               configMap:
                 name: authentik-blueprint-argo-workflows
+            - name: blueprint-grafana
+              configMap:
+                name: authentik-blueprint-grafana
           volumeMounts:
             - name: postgres-creds
               mountPath: /postgres-creds
@@ -97,6 +105,10 @@ spec:
             - name: blueprint-argo-workflows
               mountPath: /blueprints/custom/argo-workflows.yaml
               subPath: argo-workflows.yaml
+              readOnly: true
+            - name: blueprint-grafana
+              mountPath: /blueprints/custom/grafana.yaml
+              subPath: grafana.yaml
               readOnly: true
 
         worker:
@@ -112,6 +124,11 @@ spec:
                 secretKeyRef:
                   name: authentik-oidc-argo-workflows
                   key: client-secret
+            - name: GRAFANA_OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-oidc-grafana
+                  key: client-secret
           volumes:
             - name: postgres-creds
               secret:
@@ -122,6 +139,9 @@ spec:
             - name: blueprint-argo-workflows
               configMap:
                 name: authentik-blueprint-argo-workflows
+            - name: blueprint-grafana
+              configMap:
+                name: authentik-blueprint-grafana
           volumeMounts:
             - name: postgres-creds
               mountPath: /postgres-creds
@@ -132,6 +152,10 @@ spec:
             - name: blueprint-argo-workflows
               mountPath: /blueprints/custom/argo-workflows.yaml
               subPath: argo-workflows.yaml
+              readOnly: true
+            - name: blueprint-grafana
+              mountPath: /blueprints/custom/grafana.yaml
+              subPath: grafana.yaml
               readOnly: true
 
         prometheus:
