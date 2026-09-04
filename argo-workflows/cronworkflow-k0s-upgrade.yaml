@@ -27,9 +27,22 @@ spec:
   timezone: "Europe/Berlin"
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 600
+  # Runs pile up as Workflow CRs (+ their pods/logs) forever without
+  # this - cap the count and, more importantly, guarantee actual
+  # time-based cleanup via ttlStrategy below regardless of how often
+  # this particular schedule fires (a weekly cron with only a count
+  # limit could sit around for most of a week).
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
   workflowSpec:
     serviceAccountName: k0s-autopilot-runner
     entrypoint: main
+    # Deletes the Workflow (and its pods) 1 day after it finishes,
+    # independent of successfulJobsHistoryLimit/failedJobsHistoryLimit
+    # above - the actual "gone within 1 day max" guarantee.
+    ttlStrategy:
+      secondsAfterSuccess: 86400
+      secondsAfterFailure: 86400
     templates:
       - name: main
         script:

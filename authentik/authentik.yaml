@@ -14,7 +14,13 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
-      - Replace=true
+      # Replace=true removed (2026-09-04) - this was the exact syncOption
+      # that caused the ArgoCD self-management outage (kubectl replace is a
+      # full PUT and trips Deployment/StatefulSet immutable-field checks
+      # like spec.selector even when the value is unchanged). Plain
+      # ServerSideApply patches only what actually changed, so it never
+      # hits an unchanged immutable field. See argocd/argocd.yaml for the
+      # original incident writeup.
   destination:
     namespace: authentik
     server: https://kubernetes.default.svc

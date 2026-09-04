@@ -9,6 +9,7 @@
   "rebaseWhen": "conflicted",
   "customManagers": [
     {
+      "description": "Track Renovate's own image (this is the CronJob that runs Renovate itself)",
       "customType": "regex",
       "managerFilePatterns": [
         "/home/renovate/renovate-cron\\.yaml/"
@@ -34,6 +35,7 @@
       "versioningTemplate": "semver"
     },
     {
+      "description": "Track Seerr's app image tag (separate from the OCI chart version above)",
       "customType": "regex",
       "managerFilePatterns": [
         "/arr/seerr-helm\\.yaml$/"
@@ -59,6 +61,7 @@
       "versioningTemplate": "semver"
     },
     {
+      "description": "Track the cert-manager OCI Helm chart version",
       "customType": "regex",
       "managerFilePatterns": [
         "/cert-manager/cert-manager\\.yaml/"
@@ -71,6 +74,7 @@
       "versioningTemplate": "semver"
     },
     {
+      "description": "Track the Vaultwarden server image",
       "customType": "regex",
       "managerFilePatterns": [
         "/vaultwarden/vault\\.yaml/"
@@ -83,6 +87,7 @@
       "versioningTemplate": "semver"
     },
     {
+      "description": "Track the Immich server image (separate from the OCI chart version above)",
       "customType": "regex",
       "managerFilePatterns": [
         "/immich/immich\\.yaml/"
@@ -95,6 +100,7 @@
       "versioningTemplate": "semver"
     },
     {
+      "description": "Track the Homepage dashboard image",
       "customType": "regex",
       "managerFilePatterns": [
         "/home/homepage/homepage-deployment\\.yaml/"
@@ -107,6 +113,7 @@
       "versioningTemplate": "semver"
     },
     {
+      "description": "Track the NUT (UPS) exporter image",
       "customType": "regex",
       "managerFilePatterns": [
         "/monitoring/nut-exporter-deployment\\.yaml/"
@@ -119,6 +126,7 @@
       "versioningTemplate": "semver"
     },
     {
+      "description": "Track the Paperless-ngx image",
       "customType": "regex",
       "managerFilePatterns": [
         "/paperless/paperless-deployment\\.yaml/"
@@ -131,6 +139,7 @@
       "versioningTemplate": "semver"
     },
     {
+      "description": "Track the Paperless-AI image",
       "customType": "regex",
       "managerFilePatterns": [
         "/paperless/paperless-ai\\.yaml/"
@@ -143,8 +152,10 @@
       "versioningTemplate": "semver"
     },
     {
+      "description": "Track the opstree Redis image used by both Immich's and Paperless's CNPG-adjacent Redis CRs (identical pattern in both files)",
       "customType": "regex",
       "managerFilePatterns": [
+        "/immich/immich\\.redis\\.yaml/",
         "/paperless/paperless\\.redis\\.yaml/"
       ],
       "matchStrings": [
@@ -155,6 +166,7 @@
       "versioningTemplate": "semver"
     },
     {
+      "description": "Track the BentoPDF image",
       "customType": "regex",
       "managerFilePatterns": [
         "/documents/bentopdf-deployment\\.yaml/"
@@ -167,6 +179,7 @@
       "versioningTemplate": "semver"
     },
     {
+      "description": "Track the Kometa image",
       "customType": "regex",
       "managerFilePatterns": [
         "/arr/kometa-cron\\.yaml/"
@@ -179,6 +192,7 @@
       "versioningTemplate": "semver"
     },
     {
+      "description": "Track Immich's CloudNativePG ClusterImageCatalog image (not a plain 'image:' field, hence the custom regex)",
       "customType": "regex",
       "managerFilePatterns": [
         "/immich/immich\\.pg\\.yaml/"
@@ -191,18 +205,7 @@
       "versioningTemplate": "docker"
     },
     {
-      "customType": "regex",
-      "managerFilePatterns": [
-        "/immich/immich\\.redis\\.yaml/"
-      ],
-      "matchStrings": [
-        "kubernetesConfig:\\s*\\n\\s*image:\\s*quay\\.io\\/opstree\\/redis:(?<currentValue>v?[0-9\\.]+)"
-      ],
-      "datasourceTemplate": "docker",
-      "depNameTemplate": "quay.io/opstree/redis",
-      "versioningTemplate": "semver"
-    },
-    {
+      "description": "Track the MeTube image",
       "customType": "regex",
       "managerFilePatterns": [
         "/arr/metube-deployment\\.yaml/"
@@ -215,6 +218,7 @@
       "versioningTemplate": "semver"
     },
     {
+      "description": "Track the Tautulli image",
       "customType": "regex",
       "managerFilePatterns": [
         "/arr/tautulli-deployment\\.yaml/"
@@ -227,6 +231,7 @@
       "versioningTemplate": "semver"
     },
     {
+      "description": "Track the plex-auto-languages image",
       "customType": "regex",
       "managerFilePatterns": [
         "/arr/plex-auto-language\\.yaml/"
@@ -239,6 +244,7 @@
       "versioningTemplate": "semver"
     },
     {
+      "description": "Track the Sonarr (linuxserver) image",
       "customType": "regex",
       "managerFilePatterns": [
         "/arr/sonarr-deployment\\.yaml/"
@@ -251,6 +257,7 @@
       "versioningTemplate": "regex:^v?(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?:\\.(?<revision>\\d+))?-ls(?<build>\\d+)$"
     },
     {
+      "description": "Track the Prowlarr (linuxserver) image",
       "customType": "regex",
       "managerFilePatterns": [
         "/arr/prowlarr-deployment\\.yaml/"
@@ -263,6 +270,7 @@
       "versioningTemplate": "regex:^v?(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?:\\.(?<revision>\\d+))?-ls(?<build>\\d+)$"
     },
     {
+      "description": "Track the Radarr (linuxserver) image",
       "customType": "regex",
       "managerFilePatterns": [
         "/arr/radarr-deployment\\.yaml/"
@@ -275,6 +283,7 @@
       "versioningTemplate": "regex:^v?(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?:\\.(?<revision>\\d+))?-ls(?<build>\\d+)$"
     },
     {
+      "description": "Track the SABnzbd (linuxserver) image",
       "customType": "regex",
       "managerFilePatterns": [
         "/arr/sabnzbd-deployment\\.yaml/"
@@ -287,6 +296,7 @@
       "versioningTemplate": "regex:^v?(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?:\\.(?<revision>\\d+))?-ls(?<build>\\d+)$"
     },
     {
+      "description": "Track the Bazarr (linuxserver) image",
       "customType": "regex",
       "managerFilePatterns": [
         "/arr/bazarr-deployment\\.yaml/"
@@ -310,6 +320,33 @@
       "datasourceTemplate": "github-releases",
       "depNameTemplate": "k0sproject/k0s",
       "versioningTemplate": "regex:^v(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)\\+k0s\\.(?<build>\\d+)$"
+    },
+    {
+      "description": "Track the python:3.12-slim base image used by the ansible-runner CronWorkflows (daily VM/LXC update + weekly k0s node restart)",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/argo-workflows/cronworkflow-ansible-update\\.yaml$/",
+        "/argo-workflows/cronworkflow-k0s-restart\\.yaml$/"
+      ],
+      "matchStrings": [
+        "image:\\s*python:(?<currentValue>[0-9]+\\.[0-9]+-slim)"
+      ],
+      "datasourceTemplate": "docker",
+      "depNameTemplate": "python",
+      "versioningTemplate": "docker"
+    },
+    {
+      "description": "Track the alpine/k8s (kubectl) image used by the k0s-autopilot-upgrade CronWorkflow",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/argo-workflows/cronworkflow-k0s-upgrade\\.yaml$/"
+      ],
+      "matchStrings": [
+        "image:\\s*alpine\\/k8s:(?<currentValue>[0-9\\.]+)"
+      ],
+      "datasourceTemplate": "docker",
+      "depNameTemplate": "alpine/k8s",
+      "versioningTemplate": "semver"
     }
   ],
   "argocd": {
