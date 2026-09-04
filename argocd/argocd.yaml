@@ -38,11 +38,15 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
-      # Existing Deployments/Services etc. were created by the old
-      # `kubectl apply --server-side` install script under a different
-      # field manager; Replace avoids the same class of merge-conflict
-      # we hit migrating argo-workflows to a new chart major version.
-      - Replace=true
+      # Replace=true was here to work around field-manager conflicts with
+      # the old imperatively-installed objects, but `kubectl replace` (a
+      # full PUT) kept tripping Deployment/StatefulSet immutable-field
+      # checks (spec.selector) even when the value hadn't changed - and
+      # caused a full control-plane outage during the migration. Now that
+      # every object has been recreated once with the chart's own labels
+      # (2026-09-04 incident recovery), plain ServerSideApply is enough:
+      # it patches only what actually changed, so it never touches an
+      # unchanged immutable field in the first place.
   destination:
     namespace: argocd
     server: https://kubernetes.default.svc
