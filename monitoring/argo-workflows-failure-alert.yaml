@@ -1,0 +1,52 @@
+# Alerts when any Argo Workflow (i.e. any of the CronWorkflows in
+# argo-workflows/*.yaml - k0s-autopilot-upgrade, ansible-daily-update,
+# ansible-weekly-k0s-restart, soulsolid-rebuild) ends up sitting in Failed
+# or Error phase.
+#
+# Uses the workflow controller's own built-in `argo_workflows_count` gauge
+# (already scraped - controller.serviceMonitor.enabled: true is set in
+# argo-workflows/argo-workflows.yaml) rather than anything workflow-authored,
+# so a future CronWorkflow added to that folder is covered automatically
+# with no change needed here.
+#
+# Known limitation: this metric's only label is `status` - no per-workflow
+# or per-CronWorkflow name, so the alert can tell you *that* something
+# failed but not *which* one. Check the Argo Workflows UI
+# (https://argo-workflows.attias.io) for the actual failed run.
+#
+# NOTE: I confirmed `argo_workflows_count{status="..."}` is real from an
+# actual reported instance's scraped output, but couldn't query this
+# cluster's own Prometheus directly (LAN-only, same constraint as
+# everything else this session) - worth a one-time sanity check after this
+# syncs: open https://prometheus.attias.io, query `argo_workflows_count`,
+# and confirm the label really is `status` with values like
+# Failed/Error/Succeeded/Running on this specific chart version, since
+# metric label names have shifted across Argo Workflows versions before.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: argo-workflows-failure-alerts
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+  - name: argo-workflows.alerts
+    interval: 1m
+    rules:
+    - alert: ArgoWorkflowFailed
+      expr: argo_workflows_count{status=~"Failed|Error"} > 0
+      for: 5m
+      labels:
+        severity: warning
+        tier: automation
+      annotations:
+        summary: "An Argo Workflow ended in {{ $labels.status }}"
+        description: >
+          At least one workflow run in argo-workflows is sitting in
+          {{ $labels.status }} state. Check
+          https://argo-workflows.attias.io for which CronWorkflow it was
+          (k0s-autopilot-upgrade, ansible-daily-update,
+          ansible-weekly-k0s-restart, or soulsolid-rebuild) and why.
+          It'll keep firing until the failed run is cleaned up (TTL is 1
+          day) or re-run successfully.
