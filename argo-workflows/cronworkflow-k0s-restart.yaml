@@ -3,6 +3,21 @@
 # node if /var/run/reboot-required exists (left behind by a prior apt
 # upgrade), one node at a time (serial: 1 in the playbook) so the cluster
 # stays up throughout.
+#
+# CHICKEN-AND-EGG GUARD: this Workflow pod runs on one of the very worker
+# nodes rolling_k0s_restart.yaml can reboot. Handled deterministically, not
+# by hoping a future run lands elsewhere:
+#   1. Restart every node EXCEPT the one hosting this pod, the normal
+#      blocking way (serial: 1, waits for each to come back).
+#   2. Then handle the self-hosting node as an explicit last step, via a
+#      detached shell command (NOT the reboot module - ansible.builtin.reboot
+#      ignores async/poll and blocks regardless, see the note below) so this
+#      pod exits 0 cleanly a couple seconds before its own node actually goes
+#      down, giving Argo a clean Succeeded instead of an abrupt Error. Covers
+#      every node on every run - no dependency on where a future run lands.
+# k8s node name -> ansible inventory name is a fixed prefix strip
+# (k0s-worker-03 -> worker-03), confirmed against `kubectl get
+# nodes`/`controlnodes` earlier.
 apiVersion: argoproj.io/v1alpha1
 kind: CronWorkflow
 metadata:
@@ -22,6 +37,11 @@ spec:
         script:
           image: python:3.12-slim
           command: [bash]
+          env:
+            - name: MY_K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
           source: |
             set -euo pipefail
             apt-get update -qq
@@ -36,7 +56,40 @@ spec:
             chmod 600 ~/.ssh/id_ed25519
             export ANSIBLE_HOST_KEY_CHECKING=False
 
-            ansible-playbook -i inventory.ini rolling_k0s_restart.yaml
+            MY_ANSIBLE_HOST="${MY_K8S_NODE_NAME#k0s-}"
+            echo "This pod is running on k8s node $MY_K8S_NODE_NAME -> ansible host '$MY_ANSIBLE_HOST'"
+
+            echo "--- Step 1: restart every other node (blocking, verified) ---"
+            ansible-playbook -i inventory.ini rolling_k0s_restart.yaml --limit "all:!${MY_ANSIBLE_HOST}"
+
+            echo "--- Step 2: restart this pod's own node (fire-and-forget, may cut this run short) ---"
+            cat > /tmp/self-restart.yaml <<'SELFEOF'
+            ---
+            - name: "Fire-and-forget restart of the node running this Workflow pod"
+              hosts: "{{ target }}"
+              become: true
+              tasks:
+                - name: "Check if a reboot is required"
+                  ansible.builtin.stat:
+                    path: /var/run/reboot-required
+                  register: reboot_required_file
+
+                - name: "Reboot if required - detached shell, NOT the reboot module"
+                  # ansible.builtin.reboot ignores async/poll and blocks on
+                  # the controller regardless (confirmed:
+                  # github.com/ansible/ansible/issues/71517) - since the
+                  # controller here IS the node about to reboot, that block
+                  # would just get killed outright when the node goes down,
+                  # which Argo reports as Error, not a clean exit. A plain
+                  # shell module has no such action-plugin orchestration:
+                  # it returns as soon as the backgrounded command is
+                  # launched, seconds before systemctl reboot actually
+                  # fires, giving this pod time to exit 0 cleanly first.
+                  ansible.builtin.shell: |
+                    setsid nohup bash -c 'sleep 2 && systemctl reboot' < /dev/null > /dev/null 2>&1 &
+                  when: reboot_required_file.stat.exists
+            SELFEOF
+            ansible-playbook -i inventory.ini /tmp/self-restart.yaml -e "target=${MY_ANSIBLE_HOST}"
           volumeMounts:
             - name: ansible-ssh-key
               mountPath: /etc/ansible-ssh
