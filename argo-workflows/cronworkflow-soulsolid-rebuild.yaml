@@ -1,0 +1,167 @@
+# Rebuilds and redeploys the custom soulsolid+deemix-plugin image whenever
+# arr/Dockerfile changes (Renovate bumps the `FROM contre95/soulsolid:vX.Y.Z`
+# line automatically on a new upstream release, same automerge policy as
+# everything else in this repo).
+#
+# Polls on a schedule rather than reacting to a webhook - a GitHub webhook
+# (via Argo Events) would rebuild within seconds instead of up to ~2h, but
+# needs a whole new component deployed plus an authenticated endpoint
+# reachable from GitHub. Not worth that extra surface for a "rebuild this
+# occasionally" homelab image; revisit if the staleness ever actually
+# matters.
+#
+# Building actually needs a real BuildKit engine, not Kaniko - Kaniko is
+# now archived (June 2025) and never supported RUN --mount=type=ssh, and
+# even without that specific instruction, running a genuine `docker buildx
+# build --push` (exactly what deploy-new-soulsolid.sh already does by
+# hand) is the most faithful translation of the existing process. That
+# means a privileged Docker-in-Docker sidecar in the build step - the same
+# trust level `sudo docker buildx build` already has locally, just now
+# inside the cluster. It's intentionally the only privileged workload in
+# this automation folder.
+#
+# State tracking: since the pushed image is always tagged `:latest` (no
+# version encoded in the tag), there's nothing to compare against a
+# running Deployment to know "has this already been built". A ConfigMap
+# (soulsolid-build-state, in the arr namespace) holds the sha256 of the
+# last-built Dockerfile instead - cheap, no extra infra, survives
+# CronWorkflow history cleanup, and the very first run just treats an
+# absent ConfigMap as "never built" and proceeds.
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: soulsolid-rebuild
+  namespace: argo-workflows
+spec:
+  schedules:
+    - "0 */2 * * *"
+  timezone: "Europe/Berlin"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 1800
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  workflowSpec:
+    serviceAccountName: soulsolid-builder
+    entrypoint: main
+    ttlStrategy:
+      secondsAfterSuccess: 86400
+      secondsAfterFailure: 86400
+    volumes:
+      - name: dockerhub-registry
+        secret:
+          secretName: soulsolid-dockerhub-registry
+    templates:
+      - name: main
+        steps:
+          - - name: check-version
+              template: check-version
+          - - name: build-and-push
+              template: build-and-push
+              when: "{{steps.check-version.outputs.result}} == changed"
+          - - name: rollout-and-record
+              template: rollout-and-record
+              when: "{{steps.check-version.outputs.result}} == changed"
+              arguments:
+                parameters:
+                  - name: dockerfile-hash
+                    value: "{{steps.check-version.outputs.parameters.hash}}"
+
+      # Compares the sha256 of arr/Dockerfile on main against the hash
+      # recorded from the last successful build. Prints "changed" or
+      # "unchanged" as the LAST line of stdout - that's what Argo captures
+      # as this step's `outputs.result`, so nothing else in this script
+      # may print to stdout after that (informational output goes to
+      # stderr instead).
+      - name: check-version
+        outputs:
+          parameters:
+            - name: hash
+              valueFrom:
+                path: /tmp/hash.txt
+        script:
+          image: alpine/k8s:1.36.4
+          command: [sh]
+          source: |
+            set -eu
+            apk add --no-cache git >&2
+
+            git clone --depth 1 https://github.com/cattias/proxmox_argocd_apps.git /tmp/repo >&2
+            NEW_HASH=$(sha256sum /tmp/repo/arr/Dockerfile | awk '{print $1}')
+            echo "$NEW_HASH" > /tmp/hash.txt
+
+            OLD_HASH=$(kubectl get configmap soulsolid-build-state -n arr \
+              -o jsonpath='{.data.dockerfile-hash}' 2>/dev/null || echo "")
+
+            echo "old=$OLD_HASH new=$NEW_HASH" >&2
+
+            if [ "$NEW_HASH" = "$OLD_HASH" ]; then
+              echo "unchanged"
+            else
+              echo "changed"
+            fi
+
+      # The only privileged step in this automation folder - see the
+      # top-of-file note on why Kaniko wasn't an option.
+      - name: build-and-push
+        container:
+          image: docker:27-cli
+          command: [sh, -c]
+          args:
+            - |
+              set -eu
+              apk add --no-cache git
+
+              echo "Waiting for the dind sidecar..."
+              until docker info >/dev/null 2>&1; do sleep 1; done
+
+              mkdir -p /root/.docker
+              cp /etc/dockerhub-registry/.dockerconfigjson /root/.docker/config.json
+
+              git clone --depth 1 https://github.com/cattias/proxmox_argocd_apps.git /tmp/repo
+              cd /tmp/repo/arr
+
+              # Extra tag with the actual soulsolid version alongside :latest -
+              # purely additive traceability/rollback trail, the Deployment
+              # still runs :latest exactly as it always has.
+              BASE_TAG=$(sed -n 's/^FROM contre95\/soulsolid:\(.*\)$/\1/p' Dockerfile)
+
+              docker buildx build \
+                --platform linux/amd64 \
+                -t kikiattias/soulsolid-plugins:latest \
+                -t "kikiattias/soulsolid-plugins:${BASE_TAG}" \
+                --push .
+          env:
+            - name: DOCKER_HOST
+              value: tcp://localhost:2375
+          volumeMounts:
+            - name: dockerhub-registry
+              mountPath: /etc/dockerhub-registry
+              readOnly: true
+        sidecars:
+          - name: dind
+            image: docker:27-dind
+            securityContext:
+              privileged: true
+            env:
+              - name: DOCKER_TLS_CERTDIR
+                value: ""
+
+      # Restarts the Deployment so it picks up the freshly-pushed :latest
+      # image (imagePullPolicy: Always + Recreate strategy already does
+      # the rest, same as running deploy-new-soulsolid.sh's last line by
+      # hand), then records the hash so the next run knows this Dockerfile
+      # is already built.
+      - name: rollout-and-record
+        inputs:
+          parameters:
+            - name: dockerfile-hash
+        container:
+          image: alpine/k8s:1.36.4
+          command: [sh, -c]
+          args:
+            - |
+              set -eu
+              kubectl rollout restart deployment/soulsolid -n arr
+              kubectl create configmap soulsolid-build-state -n arr \
+                --from-literal=dockerfile-hash="{{inputs.parameters.dockerfile-hash}}" \
+                --dry-run=client -o yaml | kubectl apply -f -
