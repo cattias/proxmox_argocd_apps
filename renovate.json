@@ -336,10 +336,11 @@
       "versioningTemplate": "docker"
     },
     {
-      "description": "Track the alpine/k8s (kubectl) image used by the k0s-autopilot-upgrade CronWorkflow",
+      "description": "Track the alpine/k8s (kubectl) image used by the k0s-autopilot-upgrade and soulsolid-rebuild CronWorkflows",
       "customType": "regex",
       "managerFilePatterns": [
-        "/argo-workflows/cronworkflow-k0s-upgrade\\.yaml$/"
+        "/argo-workflows/cronworkflow-k0s-upgrade\\.yaml$/",
+        "/argo-workflows/cronworkflow-soulsolid-rebuild\\.yaml$/"
       ],
       "matchStrings": [
         "image:\\s*alpine\\/k8s:(?<currentValue>[0-9\\.]+)"
@@ -347,6 +348,20 @@
       "datasourceTemplate": "docker",
       "depNameTemplate": "alpine/k8s",
       "versioningTemplate": "semver"
+    },
+    {
+      "description": "Track the docker:27-cli/dind images used by the soulsolid-rebuild CronWorkflow's build step",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/argo-workflows/cronworkflow-soulsolid-rebuild\\.yaml$/"
+      ],
+      "matchStrings": [
+        "image: docker:(?<currentValue>[0-9]+-cli)",
+        "image: docker:(?<currentValue>[0-9]+-dind)"
+      ],
+      "datasourceTemplate": "docker",
+      "depNameTemplate": "docker",
+      "versioningTemplate": "docker"
     }
   ],
   "argocd": {

@@ -90,3 +90,56 @@ roleRef:
   kind: Role
   name: workflow-executor
   apiGroup: rbac.authorization.k8s.io
+---
+# soulsolid-rebuild needs to (a) restart the soulsolid Deployment after a
+# successful build+push, and (b) read/write a ConfigMap in the arr
+# namespace to remember which Dockerfile hash was last built - both scoped
+# to just that one namespace and, for the Deployment, just that one
+# resourceName.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: soulsolid-builder
+  namespace: argo-workflows
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: soulsolid-builder
+  namespace: arr
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    resourceNames: ["soulsolid"]
+    verbs: ["get", "patch"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: soulsolid-builder
+  namespace: arr
+subjects:
+  - kind: ServiceAccount
+    name: soulsolid-builder
+    namespace: argo-workflows
+roleRef:
+  kind: Role
+  name: soulsolid-builder
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: soulsolid-builder-workflow-executor
+  namespace: argo-workflows
+subjects:
+  - kind: ServiceAccount
+    name: soulsolid-builder
+    namespace: argo-workflows
+roleRef:
+  kind: Role
+  name: workflow-executor
+  apiGroup: rbac.authorization.k8s.io
