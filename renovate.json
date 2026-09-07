@@ -336,11 +336,12 @@
       "versioningTemplate": "docker"
     },
     {
-      "description": "Track the alpine/k8s (kubectl) image used by the k0s-autopilot-upgrade and soulsolid-rebuild CronWorkflows",
+      "description": "Track the alpine/k8s (kubectl) image used by the k0s-autopilot-upgrade, soulsolid-rebuild, and dex-selfheal CronWorkflows",
       "customType": "regex",
       "managerFilePatterns": [
         "/argo-workflows/cronworkflow-k0s-upgrade\\.yaml$/",
-        "/argo-workflows/cronworkflow-soulsolid-rebuild\\.yaml$/"
+        "/argo-workflows/cronworkflow-soulsolid-rebuild\\.yaml$/",
+        "/argo-workflows/cronworkflow-dex-selfheal\\.yaml$/"
       ],
       "matchStrings": [
         "image:\\s*alpine\\/k8s:(?<currentValue>[0-9\\.]+)"

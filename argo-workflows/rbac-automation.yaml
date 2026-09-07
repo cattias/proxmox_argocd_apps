@@ -143,3 +143,51 @@ roleRef:
   kind: Role
   name: workflow-executor
   apiGroup: rbac.authorization.k8s.io
+---
+# dex-selfheal (argo-workflows/cronworkflow-dex-selfheal.yaml) needs to
+# restart exactly one Deployment in the argocd namespace when dex stops
+# answering - see that file for the 2026-09-07 incident this exists for.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dex-selfheal
+  namespace: argo-workflows
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: dex-selfheal
+  namespace: argocd
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    resourceNames: ["argocd-dex-server"]
+    verbs: ["get", "list", "watch", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: dex-selfheal
+  namespace: argocd
+subjects:
+  - kind: ServiceAccount
+    name: dex-selfheal
+    namespace: argo-workflows
+roleRef:
+  kind: Role
+  name: dex-selfheal
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: dex-selfheal-workflow-executor
+  namespace: argo-workflows
+subjects:
+  - kind: ServiceAccount
+    name: dex-selfheal
+    namespace: argo-workflows
+roleRef:
+  kind: Role
+  name: workflow-executor
+  apiGroup: rbac.authorization.k8s.io

@@ -1,0 +1,89 @@
+# Self-healing for the 2026-09-07 incident: argocd-dex-server can end up
+# "Running"/"Ready" while completely unable to serve logins, with nothing
+# in Kubernetes noticing.
+#
+# Why a probe can't catch this (checked against dex's own source before
+# writing this, not assumed): when ArgoCD's ContinueOnConnectorFailure mode
+# is on and EVERY configured connector fails to open at boot (our case -
+# just the one "authentik" connector), server.NewServer() returns an error
+# and the caller never starts the main HTTP listener (port 5556) at all -
+# matching the "connection refused" argocd-server saw. But the process
+# itself doesn't exit, so kubelet's restart count never increments, and
+# dex's own /healthz handler just calls a static HealthChecker.IsHealthy()
+# that has nothing to do with connector state - so even the chart's
+# built-in livenessProbe (dex.livenessProbe, httpPath: /healthz/live on the
+# metrics port) would have stayed green throughout. There's also no
+# built-in retry: a connector that fails to open at boot stays failed until
+# the process restarts. Root cause of the boot-time failure itself was a
+# one-off network blip (see argocd/argocd.yaml's migration-incident notes
+# for the same day) - this doesn't fix that, it just makes sure a repeat
+# doesn't sit broken for days again.
+#
+# So: poll the exact URL argocd-server itself queries, and if it's not
+# answering, force a restart so dex gets a fresh attempt at opening its
+# connectors (confirmed live on 2026-09-07 that a plain restart is enough
+# once the underlying network issue has cleared). If it's STILL not
+# healthy after a restart - i.e. something more than a transient blip,
+# most likely Authentik itself being down - exit non-zero so the existing
+# argo-workflows-failure-alert.yaml PrometheusRule (ArgoWorkflowFailed)
+# fires. Self-heal quietly for the common case, only page a human when
+# self-healing genuinely can't fix it.
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: dex-selfheal
+  namespace: argo-workflows
+spec:
+  schedules:
+    - "*/5 * * * *"
+  timezone: "Europe/Berlin"
+  concurrencyPolicy: Forbid
+  # Short on purpose - this fires every 5 minutes, so a missed slot should
+  # just get skipped rather than firing hours late.
+  startingDeadlineSeconds: 120
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  workflowSpec:
+    serviceAccountName: dex-selfheal
+    entrypoint: main
+    ttlStrategy:
+      secondsAfterSuccess: 86400
+      secondsAfterFailure: 86400
+    templates:
+      - name: main
+        script:
+          # Same image already tracked by Renovate for the other
+          # kubectl-driven CronWorkflows in this folder - has both curl
+          # and kubectl.
+          image: alpine/k8s:1.36.4
+          command: [sh]
+          source: |
+            set -eu
+
+            # The exact URL argocd-server itself queries through dex - see
+            # the "failed to query provider" error this reproduces.
+            DEX_HEALTH_URL="http://argocd-dex-server.argocd.svc.cluster.local:5556/api/dex/.well-known/openid-configuration"
+
+            check_healthy() {
+              curl -fsS -m 5 -o /dev/null "$DEX_HEALTH_URL"
+            }
+
+            echo "Checking dex: $DEX_HEALTH_URL"
+            if check_healthy; then
+              echo "dex is healthy, nothing to do."
+              exit 0
+            fi
+
+            echo "dex did not respond - restarting argocd-dex-server so it retries opening its connectors."
+            kubectl rollout restart deployment/argocd-dex-server -n argocd
+            kubectl rollout status deployment/argocd-dex-server -n argocd --timeout=120s
+
+            echo "Re-checking after restart..."
+            sleep 10
+            if check_healthy; then
+              echo "dex is healthy again after the restart."
+              exit 0
+            fi
+
+            echo "dex is STILL not responding after a restart - this is more than a transient blip (Authentik itself may be down). Exiting non-zero to trigger the ArgoWorkflowFailed alert."
+            exit 1
