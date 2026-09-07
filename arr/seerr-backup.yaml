@@ -77,6 +77,29 @@ spec:
     sh -c "sqlite3 /data/db/db.sqlite3 .dump"
   pod:
     spec:
+      # The seerr-config-pvc is ReadWriteOnce (Ceph RBD via proxmox-ceph).
+      # Without this affinity the scheduler can place this pod on a
+      # different node than the live seerr-seerr-chart-0 pod, and the
+      # attach-detach controller then blocks forever waiting to detach
+      # a volume that is still in active use - discovered 2026-09-07 when
+      # a manually-triggered backup left this pod stuck in
+      # ContainerCreating ("Volume is already used by pod(s)
+      # seerr-seerr-chart-0"). Forcing co-location on the same node lets
+      # the CSI driver mount the RWO volume to both pods there.
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/instance
+                    operator: In
+                    values:
+                      - seerr
+                  - key: app.kubernetes.io/name
+                    operator: In
+                    values:
+                      - seerr-chart
+              topologyKey: kubernetes.io/hostname
       containers:
         - name: sqlite-dumper
           image: nouchka/sqlite3:latest
