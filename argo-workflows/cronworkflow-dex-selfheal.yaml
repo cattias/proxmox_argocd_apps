@@ -62,10 +62,15 @@ spec:
 
             # The exact URL argocd-server itself queries through dex - see
             # the "failed to query provider" error this reproduces.
-            DEX_HEALTH_URL="http://argocd-dex-server.argocd.svc.cluster.local:5556/api/dex/.well-known/openid-configuration"
+            DEX_HEALTH_URL="https://argocd-dex-server.argocd.svc.cluster.local:5556/api/dex/.well-known/openid-configuration"
 
             check_healthy() {
-              curl -fsS -m 5 -o /dev/null "$DEX_HEALTH_URL"
+              # -k: dex generates a fresh self-signed TLS cert every time
+              # it (re)starts (see its own "Generating self-signed TLS
+              # certificate for this session" log line) - there is no
+              # stable CA to verify against, and argocd-server itself
+              # talks to it the same way.
+              curl -fsSk -m 5 -o /dev/null "$DEX_HEALTH_URL"
             }
 
             echo "Checking dex: $DEX_HEALTH_URL"
