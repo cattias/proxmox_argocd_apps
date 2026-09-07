@@ -46,6 +46,14 @@ metadata:
   namespace: arr
   labels:
     backupseerr: "true"
+  annotations:
+    # ext4 on the Ceph RBD block volume auto-creates lost+found owned by
+    # root:root mode 0700 - the k8up backup pod runs as uid 1000 and
+    # can't read it, causing 2 (harmless but noisy) restic errors per
+    # backup ("error occurred during backup" during scan/archival).
+    # Same fix already applied to immich-library-pvc.yaml - see that
+    # file for the precedent. Discovered 2026-09-07.
+    k8up.io/backup-restic-args: '["--exclude", "/data/seerr-config-pvc/lost+found"]'
 spec:
   accessModes:
     - ReadWriteOnce
