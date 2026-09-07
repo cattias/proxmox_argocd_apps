@@ -78,12 +78,23 @@ spec:
             kubectl rollout restart deployment/argocd-dex-server -n argocd
             kubectl rollout status deployment/argocd-dex-server -n argocd --timeout=120s
 
-            echo "Re-checking after restart..."
-            sleep 10
-            if check_healthy; then
-              echo "dex is healthy again after the restart."
-              exit 0
-            fi
-
-            echo "dex is STILL not responding after a restart - this is more than a transient blip (Authentik itself may be down). Exiting non-zero to trigger the ArgoWorkflowFailed alert."
-            exit 1
+            # No flat sleep here on purpose - dex has no built-in readiness
+            # probe, so the "kubectl rollout status" above only confirms the
+            # new pod's container process started, not that dex itself
+            # finished booting. Historical evidence (the original 2026-09-07 incident
+            # log) shows dex can take ~30s just to sync its configmap/secret
+            # informers before it even attempts to open a connector - so poll
+            # with real retries instead of guessing a fixed wait.
+            echo "Re-checking after restart (polling, dex can take ~30s+ to finish booting)..."
+            RETRY=0
+            MAX_RETRIES=18   # 18 * 5s = 90s grace period
+            until check_healthy; do
+              RETRY=$((RETRY + 1))
+              if [ "$RETRY" -ge "$MAX_RETRIES" ]; then
+                echo "dex is STILL not responding after a restart and a 90s grace period - this is more than just a slow boot (Authentik itself may be down). Exiting non-zero to trigger the ArgoWorkflowFailed alert."
+                exit 1
+              fi
+              sleep 5
+            done
+            echo "dex is healthy again after the restart (took ~$((RETRY * 5))s to come back up)."
+            exit 0
