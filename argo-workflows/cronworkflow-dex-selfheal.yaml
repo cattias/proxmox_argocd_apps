@@ -98,3 +98,43 @@ spec:
             done
             echo "dex is healthy again after the restart (took ~$((RETRY * 5))s to come back up)."
             exit 0
+---
+# Additive to the chart-managed argocd-dex-server-network-policy (Helm,
+# 182 days old at time of writing) - NOT editing that one directly, since
+# a manual edit to a Helm-owned object just gets fought/reverted on the
+# next sync. Kubernetes NetworkPolicies for the same pod are unioned, so
+# this coexists peacefully: the existing policy still only lets
+# argocd-server reach ports 5556/5557, and this adds a second, separate
+# allow for port 5556 from the argo-workflows namespace specifically -
+# discovered 2026-09-07 when dex-selfheal's every single health check
+# turned out to be silently blocked by that pre-existing policy (dex was
+# actually healthy the whole time; the check just couldn't reach it).
+#
+# Scoped to the whole argo-workflows namespace rather than to a specific
+# pod label - Argo Workflows' own podMetadata.labels field is documented
+# as unreliable at actually landing on the pods it's supposed to label
+# (see github.com/argoproj/argo-workflows/issues/7013), so a label-based
+# NetworkPolicy selector here would risk silently and intermittently
+# blocking dex-selfheal's own traffic again. Everything in argo-workflows
+# is this repo's own automation already, so a namespace-wide allow is a
+# reasonable trade-off for something this narrow (one port, one target
+# Deployment).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dex-selfheal-network-policy
+  namespace: argocd
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: argocd-dex-server
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: argo-workflows
+      ports:
+        - port: 5556
+          protocol: TCP
