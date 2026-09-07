@@ -55,4 +55,13 @@ spec:
         - name: backup-immich
           securityContext:
             runAsUser: 1000
-            runAsGroup: 1000
+            # kiki's actual primary group on the NAS is 10 (admin), not
+            # 1000 - gid 1000 doesn't map to any real account there. The
+            # NAS's ACL engine (immich_restic's "permission denied" on
+            # 2026-09-07) appears to need a (uid,gid) pair that resolves
+            # to a real known account to grant kiki's explicit Admin
+            # Read/Write ACL entry, not just a matching uid - see the
+            # conversation history around this date for the full
+            # diagnosis. runAsGroup: 1000 previously here was wrong.
+            runAsGroup: 10
+
