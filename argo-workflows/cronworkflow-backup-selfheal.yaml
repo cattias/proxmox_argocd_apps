@@ -1,0 +1,253 @@
+# Self-healing for the recurring 2026-09 overnight k8up backup failures
+# (Immich + Seerr NFS restic backups to the NAS): despite an extensive
+# investigation - ownership, NAS ACL propagation, NFS squash/identity
+# mapping, per-host export rules, offsite rclone job timing, native NAS
+# scheduled tasks, wrong-host mixups, NFS protocol version - every single
+# manual retry of a failed backup has succeeded cleanly (100% of the time,
+# across many attempts), while the actual scheduled runs still
+# intermittently fail with permission-denied errors on a different file
+# each time. The true root cause is some transient condition on the NAS's
+# own permission-checking path around the exact moment these jobs fire,
+# which clears itself within minutes. Rather than continue chasing that
+# (see the conversation history around 2026-09-07 through 2026-09-10 for
+# the full investigation), this self-heals the practical symptom: check
+# whether the day's scheduled Backup actually succeeded, and if not, fire
+# one manual retry (the same shape already proven reliable by hand) and
+# only page a human if even that retry fails.
+#
+# Two CronWorkflows below - one per namespace/schedule, since the backend
+# spec (repo subPath, target PVC, label selector) differs between them.
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: immich-backup-selfheal
+  namespace: argo-workflows
+spec:
+  # Immich's own backup schedule is "5 7 * * *" (07:05 UTC) - this runs
+  # with a generous ~55 minute buffer after that, well past how long
+  # even several retried pod attempts have taken to fail in practice.
+  schedules:
+    - "0 8 * * *"
+  timezone: "UTC"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  workflowSpec:
+    serviceAccountName: backup-selfheal
+    entrypoint: main
+    ttlStrategy:
+      secondsAfterSuccess: 604800
+      secondsAfterFailure: 604800
+    templates:
+      - name: main
+        script:
+          # Same image already tracked by Renovate for the other
+          # kubectl-driven CronWorkflows in this folder.
+          image: alpine/k8s:1.36.4
+          command: [sh]
+          source: |
+            set -eu
+
+            NAMESPACE="photos"
+            SCHEDULE_NAME="immich-nfs-backup"
+
+            echo "Checking today's $SCHEDULE_NAME backup in $NAMESPACE..."
+
+            # kubectl's jsonpath has no negative-index support, so grab
+            # all names (already time-sorted) and take the last one.
+            NAMES=$(kubectl get backup -n "$NAMESPACE" \
+              -l "k8up.io/schedule-name=$SCHEDULE_NAME" \
+              --sort-by=.metadata.creationTimestamp \
+              -o jsonpath='{.items[*].metadata.name}')
+            LATEST=$(echo "$NAMES" | awk '{print $NF}')
+
+            if [ -z "$LATEST" ]; then
+              echo "No Backup objects found at all for $SCHEDULE_NAME - treating as a failure."
+              REASON="Missing"
+            else
+              echo "Latest backup: $LATEST"
+              REASON=$(kubectl get backup -n "$NAMESPACE" "$LATEST" \
+                -o jsonpath='{.status.conditions[?(@.type=="Completed")].reason}' || true)
+              echo "Completed condition reason: ${REASON:-<none yet>}"
+            fi
+
+            if [ "$REASON" = "Succeeded" ]; then
+              echo "Last scheduled backup succeeded, nothing to do."
+              exit 0
+            fi
+
+            echo "Last scheduled backup did not succeed (reason: ${REASON:-<none>}) - triggering a manual retry."
+
+            NEW_NAME=$(kubectl create -o jsonpath='{.metadata.name}' -f - <<'EOF'
+            apiVersion: k8up.io/v1
+            kind: Backup
+            metadata:
+              generateName: immich-nfs-backup-selfheal-
+              namespace: photos
+            spec:
+              failedJobsHistoryLimit: 2
+              successfulJobsHistoryLimit: 2
+              promURL: http://prometheus-pushgateway.monitoring.svc.cluster.local:9091
+              podConfigRef:
+                name: nas-backup-pod-config
+              labelSelectors:
+                - matchExpressions:
+                    - key: backup
+                      operator: In
+                      values:
+                        - "true"
+              volumes:
+                - name: nas-repo
+                  persistentVolumeClaim:
+                    claimName: immich-backup-pvc
+              backend:
+                repoPasswordSecretRef:
+                  name: backup-repo-secret
+                  key: password
+                local:
+                  mountPath: "/mnt/backup-repository"
+                volumeMounts:
+                  - name: nas-repo
+                    mountPath: "/mnt/backup-repository"
+                    subPath: immich_restic
+            EOF
+            )
+
+            echo "Created retry: $NEW_NAME - waiting for it to finish..."
+
+            RETRY=0
+            MAX_RETRIES=30   # 30 * 10s = 5 minutes
+            while :; do
+              RETRY_REASON=$(kubectl get backup -n "$NAMESPACE" "$NEW_NAME" \
+                -o jsonpath='{.status.conditions[?(@.type=="Completed")].reason}' 2>/dev/null || true)
+              if [ "$RETRY_REASON" = "Succeeded" ]; then
+                echo "Retry succeeded after $((RETRY * 10))s."
+                exit 0
+              fi
+              if [ "$RETRY_REASON" = "Failed" ]; then
+                echo "Retry ALSO failed - this is more than a transient blip. Exiting non-zero to trigger the ArgoWorkflowFailed alert."
+                exit 1
+              fi
+              RETRY=$((RETRY + 1))
+              if [ "$RETRY" -ge "$MAX_RETRIES" ]; then
+                echo "Retry did not reach a Completed state within 5 minutes - exiting non-zero to trigger the ArgoWorkflowFailed alert."
+                exit 1
+              fi
+              sleep 10
+            done
+---
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: seerr-backup-selfheal
+  namespace: argo-workflows
+spec:
+  # Seerr's own backup schedule is "25 9 * * *" (09:25 UTC) - same ~55
+  # minute buffer as Immich's self-heal above.
+  schedules:
+    - "20 10 * * *"
+  timezone: "UTC"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  workflowSpec:
+    serviceAccountName: backup-selfheal
+    entrypoint: main
+    ttlStrategy:
+      secondsAfterSuccess: 604800
+      secondsAfterFailure: 604800
+    templates:
+      - name: main
+        script:
+          image: alpine/k8s:1.36.4
+          command: [sh]
+          source: |
+            set -eu
+
+            NAMESPACE="arr"
+            SCHEDULE_NAME="seerr-nfs-backup"
+
+            echo "Checking today's $SCHEDULE_NAME backup in $NAMESPACE..."
+
+            NAMES=$(kubectl get backup -n "$NAMESPACE" \
+              -l "k8up.io/schedule-name=$SCHEDULE_NAME" \
+              --sort-by=.metadata.creationTimestamp \
+              -o jsonpath='{.items[*].metadata.name}')
+            LATEST=$(echo "$NAMES" | awk '{print $NF}')
+
+            if [ -z "$LATEST" ]; then
+              echo "No Backup objects found at all for $SCHEDULE_NAME - treating as a failure."
+              REASON="Missing"
+            else
+              echo "Latest backup: $LATEST"
+              REASON=$(kubectl get backup -n "$NAMESPACE" "$LATEST" \
+                -o jsonpath='{.status.conditions[?(@.type=="Completed")].reason}' || true)
+              echo "Completed condition reason: ${REASON:-<none yet>}"
+            fi
+
+            if [ "$REASON" = "Succeeded" ]; then
+              echo "Last scheduled backup succeeded, nothing to do."
+              exit 0
+            fi
+
+            echo "Last scheduled backup did not succeed (reason: ${REASON:-<none>}) - triggering a manual retry."
+
+            NEW_NAME=$(kubectl create -o jsonpath='{.metadata.name}' -f - <<'EOF'
+            apiVersion: k8up.io/v1
+            kind: Backup
+            metadata:
+              generateName: seerr-nfs-backup-selfheal-
+              namespace: arr
+            spec:
+              failedJobsHistoryLimit: 2
+              successfulJobsHistoryLimit: 2
+              promURL: http://prometheus-pushgateway.monitoring.svc.cluster.local:9091
+              podConfigRef:
+                name: nas-backup-pod-config
+              labelSelectors:
+                - matchExpressions:
+                    - key: backupseerr
+                      operator: In
+                      values:
+                        - "true"
+              volumes:
+                - name: nas-repo
+                  persistentVolumeClaim:
+                    claimName: arr-backup-pvc
+              backend:
+                repoPasswordSecretRef:
+                  name: backup-repo-secret
+                  key: password
+                local:
+                  mountPath: "/mnt/backup-repository"
+                volumeMounts:
+                  - name: nas-repo
+                    mountPath: "/mnt/backup-repository"
+                    subPath: seerr_restic
+            EOF
+            )
+
+            echo "Created retry: $NEW_NAME - waiting for it to finish..."
+
+            RETRY=0
+            MAX_RETRIES=30   # 30 * 10s = 5 minutes
+            while :; do
+              RETRY_REASON=$(kubectl get backup -n "$NAMESPACE" "$NEW_NAME" \
+                -o jsonpath='{.status.conditions[?(@.type=="Completed")].reason}' 2>/dev/null || true)
+              if [ "$RETRY_REASON" = "Succeeded" ]; then
+                echo "Retry succeeded after $((RETRY * 10))s."
+                exit 0
+              fi
+              if [ "$RETRY_REASON" = "Failed" ]; then
+                echo "Retry ALSO failed - this is more than a transient blip. Exiting non-zero to trigger the ArgoWorkflowFailed alert."
+                exit 1
+              fi
+              RETRY=$((RETRY + 1))
+              if [ "$RETRY" -ge "$MAX_RETRIES" ]; then
+                echo "Retry did not reach a Completed state within 5 minutes - exiting non-zero to trigger the ArgoWorkflowFailed alert."
+                exit 1
+              fi
+              sleep 10
+            done

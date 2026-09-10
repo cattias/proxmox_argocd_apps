@@ -191,3 +191,71 @@ roleRef:
   kind: Role
   name: workflow-executor
   apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backup-selfheal
+  namespace: argo-workflows
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: backup-selfheal
+  namespace: photos
+rules:
+  - apiGroups: ["k8up.io"]
+    resources: ["backups"]
+    verbs: ["get", "list", "watch", "create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: backup-selfheal
+  namespace: photos
+subjects:
+  - kind: ServiceAccount
+    name: backup-selfheal
+    namespace: argo-workflows
+roleRef:
+  kind: Role
+  name: backup-selfheal
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: backup-selfheal
+  namespace: arr
+rules:
+  - apiGroups: ["k8up.io"]
+    resources: ["backups"]
+    verbs: ["get", "list", "watch", "create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: backup-selfheal
+  namespace: arr
+subjects:
+  - kind: ServiceAccount
+    name: backup-selfheal
+    namespace: argo-workflows
+roleRef:
+  kind: Role
+  name: backup-selfheal
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: backup-selfheal-workflow-executor
+  namespace: argo-workflows
+subjects:
+  - kind: ServiceAccount
+    name: backup-selfheal
+    namespace: argo-workflows
+roleRef:
+  kind: Role
+  name: workflow-executor
+  apiGroup: rbac.authorization.k8s.io
