@@ -16,23 +16,27 @@ spec:
     spec:
       restartPolicy: OnFailure
       containers:
-        - name: mc
-          image: quay.io/minio/mc:latest
+        - name: awscli
+          image: amazon/aws-cli:latest
           env:
-            - name: ACCESS_KEY_ID
+            - name: AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
                   name: loki-s3-secret
                   key: ACCESS_KEY_ID
-            - name: ACCESS_SECRET_KEY
+            - name: AWS_SECRET_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
                   name: loki-s3-secret
                   key: ACCESS_SECRET_KEY
+            - name: AWS_DEFAULT_REGION
+              value: "us-east-1"
+            - name: AWS_EC2_METADATA_DISABLED
+              value: "true"
           command:
             - /bin/sh
             - -c
             - |
               set -e
-              mc alias set rgw http://192.168.178.69:7480 "$ACCESS_KEY_ID" "$ACCESS_SECRET_KEY"
-              mc mb --ignore-existing rgw/loki-logs
+              aws --endpoint-url http://192.168.178.69:7480 s3 mb s3://loki-logs || true
+              aws --endpoint-url http://192.168.178.69:7480 s3 ls s3://loki-logs
