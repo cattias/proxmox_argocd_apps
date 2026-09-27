@@ -30,7 +30,7 @@ spec:
               main:
                 image:
                   repository: ghcr.io/immich-app/immich-server
-                  tag: v3.1.0
+                  tag: v3.2.2
                 env:
                   REDIS_HOSTNAME: immich-redis
                   DB_URL:
