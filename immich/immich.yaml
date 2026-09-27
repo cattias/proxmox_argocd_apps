@@ -27,6 +27,7 @@ spec:
         controllers:
           main:
             strategy: Recreate
+            rollingUpdate: null
             containers:
               main:
                 image:
@@ -62,6 +63,7 @@ spec:
           controllers:
             main:
               strategy: Recreate
+              rollingUpdate: null
           persistence:
             cache:
               enabled: true
