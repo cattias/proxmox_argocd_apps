@@ -14,8 +14,17 @@ spec:
         description: Pod {{ $labels.pod }} is taking more than 5 minutes (300 seconds) for a query.
         summary: A query is taking longer than 5 minutes.
       expr: |-
-        cnpg_backends_max_tx_duration_seconds > 300
+        cnpg_backends_max_tx_duration_seconds{pod!~"immich-db-.*"} > 300
       for: 1m
+      labels:
+        severity: warning
+    - alert: LongRunningTransactionImmich
+      annotations:
+        description: Pod {{ $labels.pod }} is taking more than 65 minutes for a query. Immich's own scheduled Integrity Checks (missing/untracked/checksum files, admin-configurable under Settings > Integrity checks) are expected to run up to 1 hour (see the "Time limit" setting there) - this alert only fires if a transaction runs noticeably longer than that expected window.
+        summary: A query on immich-db is taking longer than Immich's own integrity-check time limit allows for.
+      expr: |-
+        cnpg_backends_max_tx_duration_seconds{pod=~"immich-db-.*"} > 3900
+      for: 5m
       labels:
         severity: warning
     - alert: BackendsWaiting
