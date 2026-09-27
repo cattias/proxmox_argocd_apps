@@ -59,6 +59,9 @@ spec:
               type: LoadBalancer
         machine-learning:
           enabled: true
+          controllers:
+            main:
+              strategy: Recreate
           persistence:
             cache:
               enabled: true
