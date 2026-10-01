@@ -127,6 +127,8 @@ spec:
                 resolvers:
                   - "1.1.1.1:53"
                   - "8.8.8.8:53"
+        updateStrategy:
+          type: Recreate
         persistence:
           enabled: true
           existingClaim: traefik-data-pvc
