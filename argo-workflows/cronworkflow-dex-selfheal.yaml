@@ -55,7 +55,7 @@ spec:
           # Same image already tracked by Renovate for the other
           # kubectl-driven CronWorkflows in this folder - has both curl
           # and kubectl.
-          image: alpine/k8s:1.36.4
+          image: alpine/k8s:1.37.1
           command: [sh]
           source: |
             set -eu

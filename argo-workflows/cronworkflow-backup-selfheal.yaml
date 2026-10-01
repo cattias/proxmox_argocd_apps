@@ -44,7 +44,7 @@ spec:
         script:
           # Same image already tracked by Renovate for the other
           # kubectl-driven CronWorkflows in this folder.
-          image: alpine/k8s:1.36.4
+          image: alpine/k8s:1.37.1
           command: [sh]
           source: |
             set -eu
@@ -161,7 +161,7 @@ spec:
     templates:
       - name: main
         script:
-          image: alpine/k8s:1.36.4
+          image: alpine/k8s:1.37.1
           command: [sh]
           source: |
             set -eu
