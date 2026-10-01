@@ -104,7 +104,7 @@ spec:
       # top-of-file note on why Kaniko wasn't an option.
       - name: build-and-push
         container:
-          image: docker:27-cli
+          image: docker:29-cli
           command: [sh, -c]
           args:
             - |
@@ -139,7 +139,7 @@ spec:
               readOnly: true
         sidecars:
           - name: dind
-            image: docker:27-dind
+            image: docker:29-dind
             securityContext:
               privileged: true
             env:
