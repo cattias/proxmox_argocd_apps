@@ -47,11 +47,16 @@ spec:
             apt-get update -qq
             apt-get install -y -qq git openssh-client >/dev/null
             pip install --quiet ansible-core paramiko
-            # No `ansible-galaxy collection install` needed: update_cluster.yaml
-            # only uses ansible.builtin modules (apt, command, debug), which
-            # ship with ansible-core. community.proxmox used to be installed
-            # here but was never used, and galaxy.ansible.com's download of
-            # community-proxmox-2.1.0 started returning HTTP 500 for hours.
+            # inventory.ini uses ansible_connection=community.proxmox.proxmox_pct_remote
+            # for the LXCs (pbs, peanut, plex, both Pi-holes), so this
+            # collection IS required. Pinned (not "latest") because
+            # galaxy.ansible.com's download of community-proxmox-2.1.0 returned
+            # HTTP 500 for hours; if the Galaxy download still fails, fall back
+            # to installing the same version straight from GitHub.
+            COLL_VERSION=2.0.0
+            ansible-galaxy collection install "community.proxmox:==${COLL_VERSION}" \
+              || ansible-galaxy collection install \
+                   "git+https://github.com/ansible-collections/community.proxmox.git,${COLL_VERSION}"
 
             git clone --depth 1 https://github.com/cattias/proxmox_argocd_apps.git /tmp/repo
             cd /tmp/repo/0_install/ansible
