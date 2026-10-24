@@ -33,6 +33,12 @@ spec:
       releaseName: argo-workflows
       valuesObject:
         controller:
+          # Without this the chart renders no ServiceMonitor at all, even with
+          # serviceMonitor.enabled: true (it also requires metricsConfig or
+          # telemetryConfig enabled) - so argo_workflows_count was never scraped
+          # and the ArgoWorkflowFailed alert could never fire.
+          metricsConfig:
+            enabled: true
           serviceMonitor:
             enabled: true
             additionalLabels:
