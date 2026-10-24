@@ -3,7 +3,7 @@
 # ansible-weekly-k0s-restart, soulsolid-rebuild) ends up sitting in Failed
 # or Error phase.
 #
-# Uses the workflow controller's own built-in `argo_workflows_count` gauge
+# Uses the workflow controller's own built-in `argo_workflows_gauge` gauge
 # (already scraped - controller.serviceMonitor.enabled: true is set in
 # argo-workflows/argo-workflows.yaml) rather than anything workflow-authored,
 # so a future CronWorkflow added to that folder is covered automatically
@@ -14,14 +14,13 @@
 # failed but not *which* one. Check the Argo Workflows UI
 # (https://argo-workflows.attias.io) for the actual failed run.
 #
-# NOTE: I confirmed `argo_workflows_count{status="..."}` is real from an
-# actual reported instance's scraped output, but couldn't query this
-# cluster's own Prometheus directly (LAN-only, same constraint as
-# everything else this session) - worth a one-time sanity check after this
-# syncs: open https://prometheus.attias.io, query `argo_workflows_count`,
-# and confirm the label really is `status` with values like
-# Failed/Error/Succeeded/Running on this specific chart version, since
-# metric label names have shifted across Argo Workflows versions before.
+# NOTE: the metric is `argo_workflows_gauge{status=...}` on this chart
+# version (argo-workflows 2.0.13). It was originally written against
+# `argo_workflows_count`, which does not exist here, so the alert silently
+# never fired. Also requires controller.metricsConfig.enabled: true in
+# argo-workflows/argo-workflows.yaml - without it the chart renders no
+# ServiceMonitor at all. If the controller ever serves TLS on its metrics
+# port again (HTTP 400 on scrape), restart the controller pod.
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
@@ -35,7 +34,7 @@ spec:
     interval: 1m
     rules:
     - alert: ArgoWorkflowFailed
-      expr: argo_workflows_count{status=~"Failed|Error"} > 0
+      expr: argo_workflows_gauge{status=~"Failed|Error"} > 0
       for: 5m
       labels:
         severity: warning
