@@ -393,6 +393,13 @@
         "k0sproject/k0s"
       ],
       "automerge": false
+    },
+    {
+      "description": "Never automerge Renovate's own image - a bad release has silently stopped all updates twice, review it by hand",
+      "matchDepNames": [
+        "renovate/renovate"
+      ],
+      "automerge": false
     }
   ]
 }
