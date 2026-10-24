@@ -47,18 +47,11 @@ spec:
             apt-get update -qq
             apt-get install -y -qq git openssh-client >/dev/null
             pip install --quiet ansible-core paramiko
-            # galaxy.ansible.com intermittently returns HTTP 500 on the
-            # collection download - retry a few times before giving up
-            # instead of failing the whole daily run on a transient error.
-            for attempt in 1 2 3 4 5; do
-              ansible-galaxy collection install community.proxmox && break
-              if [ "$attempt" -eq 5 ]; then
-                echo "ansible-galaxy failed after 5 attempts" >&2
-                exit 1
-              fi
-              echo "ansible-galaxy attempt $attempt failed, retrying in $((attempt * 15))s" >&2
-              sleep $((attempt * 15))
-            done
+            # No `ansible-galaxy collection install` needed: update_cluster.yaml
+            # only uses ansible.builtin modules (apt, command, debug), which
+            # ship with ansible-core. community.proxmox used to be installed
+            # here but was never used, and galaxy.ansible.com's download of
+            # community-proxmox-2.1.0 started returning HTTP 500 for hours.
 
             git clone --depth 1 https://github.com/cattias/proxmox_argocd_apps.git /tmp/repo
             cd /tmp/repo/0_install/ansible
