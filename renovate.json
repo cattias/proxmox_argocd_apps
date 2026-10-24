@@ -95,8 +95,8 @@
       "matchStrings": [
         "main:\\s*\\n\\s*image:\\s*\\n\\s*repository:\\s*ghcr\\.io\\/immich-app\\/immich-server\\s*\\n\\s*tag:\\s*(?<currentValue>v?[0-9\\.]+)"
       ],
-      "datasourceTemplate": "docker",
-      "depNameTemplate": "ghcr.io/immich-app/immich-server",
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "immich-app/immich",
       "versioningTemplate": "semver"
     },
     {
@@ -386,6 +386,11 @@
       ],
       "automerge": true,
       "ignoreTests": true
+    },
+    {
+      "description": "Give Immich releases a day to settle before bumping the server image",
+      "matchDepNames": ["immich-app/immich"],
+      "minimumReleaseAge": "1 day"
     },
     {
       "description": "Never automerge k0s version bumps - this is the Kubernetes control plane, review it by hand before the k0s-autopilot-upgrade CronWorkflow picks it up",
