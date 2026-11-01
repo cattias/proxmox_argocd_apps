@@ -46,7 +46,7 @@ spec:
     templates:
       - name: main
         script:
-          image: alpine/k8s:1.37.1
+          image: alpine/k8s:1.37.2
           command: [bash]
           source: |
             set -euo pipefail
