@@ -1,4 +1,37 @@
 ---
+# Ubuntu kernel 7.0.0-43-generic is blacklisted: with it AppArmor (containerd's
+# cri-containerd profile) denies signals between processes inside containers,
+# which wedges Postgres 18 backends in "authentication" (CNPG databases down)
+# and breaks other containers. 7.0.0-38-generic is the last known-good kernel.
+# This play runs first so the daily apt upgrade below can never (re)install
+# 7.0.0-43 - the kernel metapackages are pinned at that exact version so apt
+# won't try to upgrade them to it, while a later fixed kernel (7.0.0-44+) still
+# installs normally. Remove the file once a fixed kernel is confirmed.
+# NOTE: this does NOT change which kernel GRUB boots on a node that already has
+# -43 installed - set the saved default entry to -38 there (see the runbook
+# commands: grub-set-default + GRUB_DEFAULT=saved).
+- name: "Block known-bad kernel 7.0.0-43-generic"
+  hosts: masters:workers:vms
+  become: true
+
+  tasks:
+    - name: "Pin kernel 7.0.0-43 packages and metapackages out of apt"
+      ansible.builtin.copy:
+        dest: /etc/apt/preferences.d/99-block-kernel-7.0.0-43
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          # Managed by Ansible (update_cluster.yaml). Kernel 7.0.0-43 breaks
+          # AppArmor signal handling for containers - do not install.
+          Package: linux-*-7.0.0-43*
+          Pin: version *
+          Pin-Priority: -1
+
+          Package: linux-generic linux-image-generic linux-headers-generic
+          Pin: version 7.0.0-43.43
+          Pin-Priority: -1
+
 - name: "Rolling Update for Homelab"
   hosts: all_nodes
   become: true
