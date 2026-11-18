@@ -5,6 +5,11 @@ metadata:
   namespace: documents
 spec:
   replicas: 1
+  # The data PVC is ReadWriteOnce (Ceph RBD), so a rolling update can't attach it
+  # to the new pod while the old one still holds it (FailedAttachVolume).
+  # Recreate stops the old pod first.
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: paperless-ai
