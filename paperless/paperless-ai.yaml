@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: paperless-ai
-        image: clusterzx/paperless-ai:4.1.0
+        image: clusterzx/paperless-ai:4.2.0
         ports:
         - containerPort: 3000
           name: http
