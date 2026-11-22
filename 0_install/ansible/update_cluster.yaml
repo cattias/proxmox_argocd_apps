@@ -1,36 +1,98 @@
 ---
-# Ubuntu kernel 7.0.0-43-generic is blacklisted: with it AppArmor (containerd's
-# cri-containerd profile) denies signals between processes inside containers,
-# which wedges Postgres 18 backends in "authentication" (CNPG databases down)
-# and breaks other containers. 7.0.0-38-generic is the last known-good kernel.
-# This play runs first so the daily apt upgrade below can never (re)install
-# 7.0.0-43 - the kernel metapackages are pinned at that exact version so apt
-# won't try to upgrade them to it, while a later fixed kernel (7.0.0-44+) still
-# installs normally. Remove the file once a fixed kernel is confirmed.
-# NOTE: this does NOT change which kernel GRUB boots on a node that already has
-# -43 installed - set the saved default entry to -38 there (see the runbook
-# commands: grub-set-default + GRUB_DEFAULT=saved).
-- name: "Block known-bad kernel 7.0.0-43-generic"
+# Kernel safeguard for the Ubuntu VMs (masters, workers, jumpbox).
+#
+# Ubuntu kernels 7.0.0-43-generic AND 7.0.0-44-generic are known-bad: AppArmor
+# (containerd's cri-containerd profile) denies signals between processes inside
+# containers, which wedges Postgres 18 backends in "authentication" (all CNPG
+# databases down) and breaks other containers. 7.0.0-38-generic is the last
+# known-good kernel. This play runs before the daily apt upgrade and:
+#   1. blocks the bad kernels' packages and HOLDS the kernel metapackages, so no
+#      newer, untested kernel is installed automatically either. Take a new
+#      kernel deliberately: unhold on ONE node, test it, then roll it out.
+#   2. marks the known-good kernel packages as manually installed, otherwise the
+#      "autoremove" in the upgrade play below would delete 7.0.0-38 (nothing
+#      depends on it once the metapackage points at a newer kernel).
+#   3. makes GRUB boot 7.0.0-38 by default - GRUB otherwise boots the newest
+#      installed kernel, so the weekly rolling restart would reboot straight
+#      back into a bad one. Skipped on hosts that don't have 7.0.0-38 installed.
+# Remove this play once a fixed kernel has been verified.
+- name: "Kernel safeguard - keep nodes on known-good 7.0.0-38-generic"
   hosts: masters:workers:vms
   become: true
 
+  vars:
+    good_kernel: "7.0.0-38-generic"
+    good_grub_entry: "Advanced options for Ubuntu>Ubuntu, with Linux 7.0.0-38-generic"
+
   tasks:
-    - name: "Pin kernel 7.0.0-43 packages and metapackages out of apt"
+    - name: "Block 7.0.0-43 / 7.0.0-44 kernel packages in apt"
       ansible.builtin.copy:
         dest: /etc/apt/preferences.d/99-block-kernel-7.0.0-43
         owner: root
         group: root
         mode: "0644"
         content: |
-          # Managed by Ansible (update_cluster.yaml). Kernel 7.0.0-43 breaks
-          # AppArmor signal handling for containers - do not install.
+          # Managed by Ansible (update_cluster.yaml). Kernels 7.0.0-43 and
+          # 7.0.0-44 break AppArmor signal handling for containers.
           Package: linux-*-7.0.0-43*
           Pin: version *
           Pin-Priority: -1
 
-          Package: linux-generic linux-image-generic linux-headers-generic
-          Pin: version 7.0.0-43.43
+          Package: linux-*-7.0.0-44*
+          Pin: version *
           Pin-Priority: -1
+
+    - name: "Hold kernel metapackages (no automatic kernel upgrades)"
+      ansible.builtin.dpkg_selections:
+        name: "{{ item }}"
+        selection: hold
+      loop:
+        - linux-generic
+        - linux-image-generic
+        - linux-headers-generic
+
+    - name: "Mark known-good kernel packages as manually installed (protect from autoremove)"
+      ansible.builtin.shell: |
+        set -o pipefail
+        pkgs=$(dpkg-query -W -f='${Package}\n' 'linux-*7.0.0-38*' 2>/dev/null || true)
+        [ -z "$pkgs" ] && exit 0
+        echo "$pkgs" | xargs apt-mark manual
+      args:
+        executable: /bin/bash
+      register: mark_manual
+      changed_when: "'set to manually installed' in mark_manual.stdout"
+
+    - name: "Check that the known-good kernel is installed"
+      ansible.builtin.stat:
+        path: "/boot/vmlinuz-{{ good_kernel }}"
+      register: good_kernel_file
+
+    - name: "Use a saved GRUB default so a specific kernel can be pinned"
+      ansible.builtin.lineinfile:
+        path: /etc/default/grub
+        regexp: '^GRUB_DEFAULT='
+        line: 'GRUB_DEFAULT=saved'
+      register: grub_default
+      when: good_kernel_file.stat.exists
+
+    - name: "Regenerate GRUB config"
+      ansible.builtin.command: update-grub
+      when: good_kernel_file.stat.exists and grub_default is changed
+
+    - name: "Read the current GRUB saved entry"
+      ansible.builtin.command: grub-editenv list
+      register: grub_env
+      changed_when: false
+      when: good_kernel_file.stat.exists
+
+    - name: "Boot the known-good kernel by default"
+      ansible.builtin.command:
+        argv:
+          - grub-set-default
+          - "{{ good_grub_entry }}"
+      when: >-
+        good_kernel_file.stat.exists and
+        ('saved_entry=' ~ good_grub_entry) not in grub_env.stdout
 
 - name: "Rolling Update for Homelab"
   hosts: all_nodes
